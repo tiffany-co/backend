@@ -1,0 +1,46 @@
+# Poetry configuration file for managing project dependencies and metadata.
+
+[tool.poetry]
+name = "gold-shop-backend"
+version = "0.1.0"
+description = "Backend for a gold shop management website"
+authors = ["Your Name <you@example.com>"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.9"
+
+# Core web framework and server
+fastapi = "^0.100.0"
+uvicorn = {extras = ["standard"], version = "^0.23.2"}
+
+# Database and ORM
+sqlalchemy = "^2.0.19"
+psycopg2-binary = "^2.9.6" # PostgreSQL driver
+alembic = "^1.11.1"      # Database migrations
+
+# Data validation and settings management
+pydantic = {extras = ["email"], version = "^2.1.1"}
+pydantic-settings = "^2.0.3" # Added for settings management
+
+# Authentication and Security
+python-jose = {extras = ["cryptography"], version = "^3.3.0"} # For JWT
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}        # For password hashing
+
+# Caching
+redis = "^4.6.0"
+
+# Other utilities
+python-multipart = "^0.0.6" # For handling form data (e.g., file uploads)
+
+[tool.poetry.group.dev.dependencies]
+# Development and testing tools
+pytest = "^7.4.0"
+black = "^23.7.0"   # Code formatter
+isort = "^5.12.0"   # Import sorter
+flake8 = "^6.0.0"  # Linter
+mypy = "^1.4.1"    # Static type checker
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
