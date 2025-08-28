@@ -1,7 +1,6 @@
-# app/main.py
-
 from fastapi import FastAPI, status
 from app.core.config import settings
+from app.api.v1 import auth, users, contacts
 
 # Create the FastAPI application instance.
 app = FastAPI(
@@ -24,8 +23,8 @@ def root():
     """
     return {"status": "ok", "message": f"Welcome to {settings.PROJECT_NAME}"}
 
-# --- API Routers will be included below ---
-# Example:
-# from app.api.v1 import users, auth
-# app.include_router(users.router, prefix=settings.API_V1_STR, tags=["Users"])
-# app.include_router(auth.router, prefix=settings.API_V1_STR, tags=["Authentication"])
+# --- Include API Routers ---
+# Add the authentication and user routers to the main application.
+app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["Authentication"])
+app.include_router(users.router, prefix=f"{settings.API_V1_STR}/users", tags=["Users"])
+app.include_router(contacts.router, prefix=f"{settings.API_V1_STR}/contacts", tags=["Contacts"])
