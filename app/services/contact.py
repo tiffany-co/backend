@@ -1,10 +1,8 @@
-# app/services/contact.py
-
 from sqlalchemy.orm import Session
 import uuid
 from app.models.contact import Contact
 from app.repository.contact import contact_repo
-from app.schema.contact import ContactCreate
+from app.schema.contact import ContactCreate, ContactUpdate
 
 class ContactService:
     """
@@ -16,14 +14,6 @@ class ContactService:
     ) -> Contact:
         """
         Handles the business logic for creating a new contact.
-
-        - Associates the contact with the user who created it.
-        - Calls the repository to save the contact.
-
-        :param db: The database session.
-        :param contact_in: The Pydantic schema with the new contact's data.
-        :param creator_id: The UUID of the user creating the contact.
-        :return: The newly created Contact model instance.
         """
         # Convert the Pydantic schema to a dictionary
         contact_data = contact_in.model_dump()
@@ -31,8 +21,18 @@ class ContactService:
         contact_data['creator_user_id'] = creator_id
 
         # Create the contact using the repository
-        db_contact = contact_repo.create(db, obj_in=contact_data)
+        # We need to pass the data as a dictionary to the repository's create method
+        db_contact = contact_repo.create(db, obj_in=ContactCreate(**contact_data))
         return db_contact
+
+    def update_contact(
+        self, db: Session, *, db_obj: Contact, obj_in: ContactUpdate
+    ) -> Contact:
+        """
+        Handles the business logic for updating a contact.
+        """
+        return contact_repo.update(db, db_obj=db_obj, obj_in=obj_in)
+
 
 # Create a single, importable instance of the ContactService.
 contact_service = ContactService()
