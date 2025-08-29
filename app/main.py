@@ -1,7 +1,6 @@
 from fastapi import FastAPI, status
 from app.core.config import settings
-from app.api.v1 import auth, users, contacts
-from backend.app.api.v1 import saved_bank_accounts
+from app.api.v1 import auth, users, contacts, saved_bank_accounts, items
 
 # Create the FastAPI application instance.
 app = FastAPI(
@@ -34,3 +33,4 @@ app.include_router(
     prefix=f"{settings.API_V1_STR}/bank-accounts",
     tags=["Saved Bank Accounts"]
 )
+app.include_router(items.router, prefix=f"{settings.API_V1_STR}/items", tags=["Items"])
