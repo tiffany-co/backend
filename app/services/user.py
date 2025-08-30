@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
+import uuid
 from app.models.user import User
 from app.repository.user import user_repo
 from app.schema.user import UserCreate, UserUpdate
@@ -8,49 +9,55 @@ from app.core.security import get_password_hash
 class UserService:
     """
     Service layer for user-related business logic.
-    It orchestrates the repository and other components to perform user operations.
     """
 
     def create_user(self, db: Session, *, user_in: UserCreate) -> User:
         """
         Handles the business logic for creating a new user.
-
-        - Checks for existing username or phone number.
-        - Hashes the password.
-        - Calls the repository to create the user in the database.
-
-        :param db: The database session.
-        :param user_in: The Pydantic schema containing the new user's data.
-        :return: The newly created User model instance.
-        :raises HTTPException: If the username or phone number is already registered.
         """
-        # Check if a user with the same username already exists
-        existing_user = user_repo.get_by_username(db, username=user_in.username)
-        if existing_user:
+        if user_repo.get_by_username(db, username=user_in.username):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="A user with this username already exists.",
             )
-
-        # Check if a user with the same phone number already exists
-        existing_phone = user_repo.get_by_phone_number(db, phone_number=user_in.phone_number)
-        if existing_phone:
+        if user_repo.get_by_phone_number(db, phone_number=user_in.phone_number):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="A user with this phone number already exists.",
             )
 
-        # Hash the password before storing it
-        hashed_password = get_password_hash(user_in.password)
+        # Create a dictionary with the data to be stored in the database
+        user_data_for_db = user_in.model_dump()
+        user_data_for_db["hashed_password"] = get_password_hash(user_in.password)
+        del user_data_for_db["password"] # Remove the plaintext password
         
-        # Create a dictionary for the new user data, replacing the plain password
-        user_data = user_in.model_dump()
-        user_data['hashed_password'] = hashed_password
-        del user_data['password'] # Remove the plain password
-
-        # Create the user using the repository
-        db_user = user_repo.create(db, obj_in=user_data)
+        # Pass the clean dictionary to the repository
+        db_user = user_repo.create(db, obj_in=user_data_for_db)
         return db_user
+
+    def update_user(self, db: Session, *, user_obj: User, user_in: UserUpdate) -> User:
+        """
+        Handles the business logic for updating a user.
+        """
+        # Check for duplicate phone number if it's being changed
+        if user_in.phone_number and user_in.phone_number != user_obj.phone_number:
+            existing_phone = user_repo.get_by_phone_number(db, phone_number=user_in.phone_number)
+            if existing_phone and existing_phone.id != user_obj.id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="This phone number is already registered.",
+                )
+        
+        update_data = user_in.model_dump(exclude_unset=True)
+
+        # Hash the new password if it's provided
+        if "password" in update_data and update_data["password"]:
+            update_data["hashed_password"] = get_password_hash(update_data["password"])
+            del update_data["password"]
+
+        return user_repo.update(db, db_obj=user_obj, obj_in=update_data)
+
 
 # Create a single, importable instance of the UserService.
 user_service = UserService()
+
