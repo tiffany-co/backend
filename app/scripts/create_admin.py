@@ -1,21 +1,27 @@
-import asyncio
 from getpass import getpass
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
 from app.services.user import user_service
 from app.schema.user import UserCreate
 from app.models.user import UserRole
 
-async def main():
+def main():
+    """
+    Synchronous script to create a new admin user.
+    """
     print("--- Create Admin User ---")
-    db: AsyncSession = SessionLocal()
+    db: Session = SessionLocal()
     
     try:
-        full_name = input("Full Name: ")
-        username = input("Username: ")
-        phone_number = input("Phone Number: ")
+        full_name = input("Full Name: ").strip()
+        username = input("Username: ").strip()
+        phone_number = input("Phone Number: ").strip()
         password = getpass("Password: ")
         
+        if not all([full_name, username, phone_number, password]):
+            print("All fields are required.")
+            return
+
         user_in = UserCreate(
             full_name=full_name,
             username=username,
@@ -24,13 +30,14 @@ async def main():
             role=UserRole.ADMIN # Explicitly set the role to ADMIN
         )
         
-        user = await user_service.create_user(db=db, user_in=user_in)
+        user = user_service.create_user(db=db, user_in=user_in)
         print(f"Admin user '{user.username}' created successfully!")
         
     except Exception as e:
         print(f"An error occurred: {e}")
     finally:
-        await db.close()
+        db.close()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
+
