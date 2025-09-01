@@ -1,11 +1,15 @@
-# This file is used to create a Declarative Base for SQLAlchemy models.
-# By importing this Base into your model files, Alembic and other tools
-# can discover all the models that should be included in database migrations.
+# app/db/base.py
+# This file is used to ensure all models are registered with SQLAlchemy's metadata.
+# When a script or process starts, importing this file will trigger the import of all
+# concrete models, making them available to tools like Alembic.
 
-from sqlalchemy.orm import declarative_base
+# Import the declarative base which all models inherit from.
+from app.db.session import Base
 
-# The declarative_base() function returns a new base class from which all
-# mapped classes should inherit. When the class definition is completed, a new
+# --- Import all concrete models here to register them with the declarative base ---
+from app.models.user import User
+from app.models.contact import Contact
+from app.models.permission import Permission
+from app.models.item import Item
+from app.models.saved_bank_account import SavedBankAccount
 
-# Table and mapper() will have been generated.
-Base = declarative_base()

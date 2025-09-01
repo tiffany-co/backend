@@ -1,36 +1,29 @@
-from fastapi import FastAPI, status
-from app.core.config import settings
-from app.api.v1 import auth, users, contacts, saved_bank_accounts, items
+from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 
-# Create the FastAPI application instance.
+from app.api.router import api_router
+from app.core.config import settings
+from app.core.exceptions import (
+    AppException,
+    app_exception_handler,
+    validation_exception_handler,
+)
+from app.logging_config import setup_logging
+
+# Apply logging configuration at startup
+setup_logging()
+
+# --- FastAPI App Initialization ---
 app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
-# A flexible root endpoint for health checks that accepts both GET and OPTIONS.
-@app.api_route(
-    "/",
-    methods=["GET", "OPTIONS"],
-    status_code=status.HTTP_200_OK,
-    tags=["Health Check"]
-)
-def root():
-    """
-    Root endpoint for health checks.
-    Responds to both GET and OPTIONS methods, useful for simple uptime checks
-    and pre-flight requests from web clients.
-    """
-    return {"status": "ok", "message": f"Welcome to {settings.PROJECT_NAME}"}
+# --- Register Exception Handlers ---
+app.add_exception_handler(AppException, app_exception_handler)
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
 
-# --- Include API Routers ---
-# Add the authentication and user routers to the main application.
-app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["Authentication"])
-app.include_router(users.router, prefix=f"{settings.API_V1_STR}/users", tags=["Users"])
-app.include_router(contacts.router, prefix=f"{settings.API_V1_STR}/contacts", tags=["Contacts"])
-app.include_router(
-    saved_bank_accounts.router,
-    prefix=f"{settings.API_V1_STR}/bank-accounts",
-    tags=["Saved Bank Accounts"]
-)
-app.include_router(items.router, prefix=f"{settings.API_V1_STR}/items", tags=["Items"])
+# --- Include Main API Router ---
+# All routes are now managed in the api_router
+app.include_router(api_router, prefix=settings.API_V1_STR)
+

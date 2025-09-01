@@ -1,5 +1,3 @@
-# app/repository/user.py
-
 from typing import Optional
 from sqlalchemy.orm import Session
 from app.models.user import User
