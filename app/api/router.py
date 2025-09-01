@@ -11,7 +11,7 @@ api_router = APIRouter()
 api_router.include_router(health.router, prefix="", tags=["Health Check"])
 
 # Include v1 authentication router
-api_router.include_router(auth.router, prefix="", tags=["Authentication"])
+api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 
 # Include all other v1 resource routers
 api_router.include_router(users.router, prefix="/users", tags=["Users"])
