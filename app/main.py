@@ -1,5 +1,3 @@
-# app/main.py
-
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 
@@ -18,7 +16,7 @@ setup_logging()
 # --- FastAPI App Initialization ---
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    openapi_url=f"/{settings.API_V1_STR}/openapi.json"
+    openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
 # --- Register Exception Handlers ---
