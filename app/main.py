@@ -1,29 +1,26 @@
 from fastapi import FastAPI
-from fastapi.exceptions import RequestValidationError
-
 from app.api.router import api_router
 from app.core.config import settings
-from app.core.exceptions import (
-    AppException,
-    app_exception_handler,
-    validation_exception_handler,
-)
+from app.core import exceptions
 from app.logging_config import setup_logging
 
-# Apply logging configuration at startup
+# --- Setup Logging ---
+# This is a crucial step. It calls our logging configuration function
+# to ensure that the loggers are set up before the application starts.
 setup_logging()
+# ---
 
-# --- FastAPI App Initialization ---
 app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
-# --- Register Exception Handlers ---
-app.add_exception_handler(AppException, app_exception_handler)
-app.add_exception_handler(RequestValidationError, validation_exception_handler)
+# --- Add Exception Handlers ---
+exceptions.add_exception_handlers(app)
+# ---
 
-# --- Include Main API Router ---
-# All routes are now managed in the api_router
+# --- Include API Router ---
+# This includes all the versioned API routes from the api/router.py file.
 app.include_router(api_router, prefix=settings.API_V1_STR)
+# ---
 

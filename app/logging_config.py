@@ -13,7 +13,7 @@ def setup_logging():
         "formatters": {
             "default": {
                 "()": "uvicorn.logging.DefaultFormatter",
-                "fmt": "%(levelprefix)s %(asctime)s - %(message)s",
+                "fmt": "%(levelprefix)s %(asctime)s - %(name)s - %(message)s",
                 "datefmt": "%Y-%m-%d %H:%M:%S",
             },
             "audit": {
@@ -34,7 +34,7 @@ def setup_logging():
                 "maxBytes": 1024 * 1024 * 5,  # 5 MB
                 "backupCount": 10,
             },
-             "app_file": {
+            "app_file": {
                 "formatter": "default",
                 "class": "logging.handlers.RotatingFileHandler",
                 "filename": "app.log",
@@ -56,6 +56,7 @@ def setup_logging():
     }
     dictConfig(log_config)
 
-# Get the configured loggers
-app_logger = logging.getLogger("app")
+# Get the configured loggers to be imported by other modules
+logger = logging.getLogger("app")
 audit_logger = logging.getLogger("audit")
+
