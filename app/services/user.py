@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 import uuid
+from typing import List
 
 from app.core.exceptions import AppException
 from app.models.user import User
@@ -15,10 +16,8 @@ class UserService:
     Service layer for user-related business logic.
     """
 
-    def _get_user_by_id_or_404(self, db: Session, *, user_id: uuid.UUID) -> User:
-        """
-        Helper method to get a user by ID or raise a 404 exception.
-        """
+    def get_user_by_id(self, db: Session, *, user_id: uuid.UUID) -> User:
+        """Helper method to get a user by ID or raise a 404 exception."""
         user = user_repo.get(db, id=user_id)
         if not user:
             raise AppException(
@@ -26,6 +25,20 @@ class UserService:
                 detail=f"User with ID {user_id} not found.",
             )
         return user
+
+    def get_user_by_username(self, db: Session, *, username: str) -> User:
+        """Helper method to get a user by username or raise a 404 exception."""
+        user = user_repo.get_by_username(db, username=username)
+        if not user:
+            raise AppException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"User with username '{username}' not found.",
+            )
+        return user
+    
+    def get_all_users(self, db: Session, skip: int, limit: int) -> List[User]:
+        """Get all users from the database."""
+        return user_repo.get_multi(db, skip=skip, limit=limit)
 
     def create_user(self, db: Session, *, user_in: UserCreate) -> User:
         """
@@ -57,16 +70,7 @@ class UserService:
     ) -> User:
         """
         Handles the business logic for updating a user with permission checks.
-        Role changes are not permitted through this service.
         """
-        if user_in.username and user_in.username != user_to_update.username:
-            existing_user = user_repo.get_by_username(db, username=user_in.username)
-            if existing_user and existing_user.id != user_to_update.id:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="This username is already registered.",
-                )
-                
         if user_to_update.role == UserRole.ADMIN and user_to_update.id != current_user.id:
             raise AppException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -79,6 +83,14 @@ class UserService:
                 detail="Users cannot deactivate themselves.",
             )
             
+        if user_in.username and user_in.username != user_to_update.username:
+            existing_user = user_repo.get_by_username(db, username=user_in.username)
+            if existing_user and existing_user.id != user_to_update.id:
+                raise AppException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="This username is already registered.",
+                )
+                
         if user_in.phone_number and user_in.phone_number != user_to_update.phone_number:
             existing_phone = user_repo.get_by_phone_number(db, phone_number=user_in.phone_number)
             if existing_phone and existing_phone.id != user_to_update.id:
@@ -100,7 +112,7 @@ class UserService:
         """
         Handles the business logic for deleting a user with permission checks.
         """
-        user_to_delete = self._get_user_by_id_or_404(db, user_id=user_id)
+        user_to_delete = self.get_user_by_id(db, user_id=user_id)
 
         if user_to_delete.role == UserRole.ADMIN:
             raise AppException(
@@ -118,6 +130,5 @@ class UserService:
         audit_logger.info(f"User '{deleted_user.username}' (ID: {deleted_user.id}) deleted by User '{current_user.username}'.")
         return deleted_user
 
-# Create a single, importable instance of the UserService.
 user_service = UserService()
 
