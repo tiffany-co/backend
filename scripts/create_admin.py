@@ -11,9 +11,10 @@ from dotenv import load_dotenv
 from rich.console import Console
 from fastapi import HTTPException
 from app.db.session import SessionLocal
-from app.schema.user import UserCreate
+from app.schema.user import AdminCreate
 from app.services.user import user_service
 from app.models.enums.user import UserRole
+from app.core.exceptions import AppException
 
 # Initialize rich console for beautiful output
 console = Console()
@@ -46,7 +47,8 @@ def create_admin():
         # --- Create user in database ---
         db = SessionLocal()
 
-        admin_data = UserCreate(
+        # Use the AdminCreate schema which includes the 'role' field
+        admin_data = AdminCreate(
             username=username,
             full_name=full_name,
             phone_number=phone_number,
@@ -61,6 +63,8 @@ def create_admin():
 
     except HTTPException as e:
         # Catch the specific error from the service layer and display its detail
+        console.print(f"\nError: {e.detail}", style="bold red")
+    except AppException as e:
         console.print(f"\nError: {e.detail}", style="bold red")
     except Exception as e:
         # Catch any other unexpected errors

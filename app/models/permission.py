@@ -2,7 +2,7 @@ from sqlalchemy import Column, ForeignKey, Table, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 
-from app.db.base import Base
+from app.db.session import Base
 from app.models.base import BaseModel
 from app.models.enums.permission import PermissionName
 
@@ -23,8 +23,13 @@ class Permission(BaseModel):
 
     name = Column(Enum(PermissionName), nullable=False, unique=True, index=True)
 
-    # The 'users' relationship will be available on Permission objects,
-    # but it's defined via the 'back_populates' on the User model.
+    # Many-to-Many relationship with User
+    users = relationship(
+        "User",
+        secondary=user_permission_association,
+        back_populates="permissions"
+    )
     
     def __repr__(self):
         return f"<Permission(name='{self.name.value}')>"
+

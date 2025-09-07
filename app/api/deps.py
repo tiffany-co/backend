@@ -1,5 +1,3 @@
-# app/api/deps.py
-
 from typing import Generator, List
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -11,6 +9,7 @@ from app.db.session import SessionLocal
 from app.core.config import settings
 from app.schema.token import TokenPayload
 from app.models.user import User, UserRole
+from app.models.permission import PermissionName
 from app.repository.user import user_repo
 
 # Define the OAuth2 scheme.
@@ -80,3 +79,23 @@ def require_role(required_roles: List[UserRole]):
             )
         return current_user
     return role_checker
+
+def require_permission(required_permission: PermissionName):
+    """
+    A dependency factory that creates a dependency to check if a user has a specific permission.
+    Admins are always granted access.
+    """
+    def permission_checker(current_user: User = Depends(get_current_active_user)) -> User:
+        # Admins have all permissions implicitly
+        if current_user.role == UserRole.ADMIN:
+            return current_user
+        
+        # Check if the user has the required permission in their list
+        user_permissions = {perm.name for perm in current_user.permissions}
+        if required_permission not in user_permissions:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"You do not have the required permission: '{required_permission.value}'",
+            )
+        return current_user
+    return permission_checker

@@ -1,31 +1,61 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+import uuid
+from pydantic import BaseModel, Field, EmailStr
 from app.models.enums.user import UserRole
-from .base import BaseSchema
+from typing import List
 
-# --- User Schemas ---
+from .permission import PermissionPublic
 
-# Base properties shared by all user-related schemas.
+# --- Base Schemas ---
+
 class UserBase(BaseModel):
-    full_name: str = Field(..., min_length=3, max_length=100)
-    username: str = Field(..., min_length=3, max_length=50)
-    phone_number: str = Field(..., min_length=10, max_length=15)
-    role: UserRole = UserRole.USER
-    is_active: Optional[bool] = True
+    """
+    Base schema for user data, containing common fields.
+    """
+    full_name: str = Field(..., min_length=3, max_length=100, example="John Doe")
+    username: str = Field(..., min_length=3, max_length=50, example="johndoe")
+    phone_number: str = Field(..., min_length=10, max_length=15, example="1234567890")
+    is_active: bool = Field(default=True, example=True)
 
-# Properties required for creating a new user.
+# --- Schemas for Creating Users ---
+
 class UserCreate(UserBase):
-    password: str = Field(..., min_length=8)
+    """
+    Schema for creating a new user. Inherits from UserBase and adds the password.
+    The 'role' is intentionally omitted, as it will be set to 'USER' by default in the service layer.
+    """
+    password: str = Field(..., min_length=8, example="a_strong_password")
 
-# Properties allowed for updating a user. All fields are optional.
+# --- Schemas for Creating Admins (just used in create admin script) ---
+class AdminCreate(UserCreate):
+    """
+    Schema specifically for the create_admin script.
+    It inherits from UserCreate and adds the 'role' field, allowing an admin to be created.
+    """
+    role: UserRole = Field(..., example=UserRole.ADMIN)
+
+# --- Schemas for Updating Users ---
 class UserUpdate(BaseModel):
-    full_name: Optional[str] = Field(None, min_length=3, max_length=100)
-    phone_number: Optional[str] = Field(None, min_length=10, max_length=15)
-    password: Optional[str] = Field(None, min_length=8)
-    role: Optional[UserRole] = None
-    is_active: Optional[bool] = None
+    """
+    Schema for updating an existing user. All fields are optional.
+    The 'role' is intentionally omitted to prevent it from being changed via this schema.
+    """
+    username: str | None = Field(None, min_length=3, max_length=50, example="new_johndoe")
+    full_name: str | None = Field(None, min_length=3, max_length=100, example="Johnathan Doe")
+    phone_number: str | None = Field(None, min_length=10, max_length=15, example="0987654321")
+    password: str | None = Field(None, min_length=8, example="a_new_strong_password")
+    is_active: bool | None = Field(None, example=True)
 
-# Public representation of a User, inherits from BaseSchema and UserBase.
-# This schema is used for API responses to avoid exposing sensitive data.
-class UserPublic(BaseSchema, UserBase):
-    pass # Inherits all necessary fields, no additional fields needed.
+# --- Schemas for Public Responses ---
+
+class UserPublic(UserBase):
+    """
+    Schema for representing a user in public API responses.
+    Excludes sensitive data like the password.
+    """
+    id: uuid.UUID = Field(..., example=uuid.uuid4())
+    role: UserRole = Field(..., example=UserRole.USER)
+    permissions: List[PermissionPublic] = []
+
+    class Config:
+        from_attributes = True
+

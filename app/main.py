@@ -1,29 +1,43 @@
 from fastapi import FastAPI
-from fastapi.exceptions import RequestValidationError
+from contextlib import asynccontextmanager
 
 from app.api.router import api_router
-from app.core.config import settings
-from app.core.exceptions import (
-    AppException,
-    app_exception_handler,
-    validation_exception_handler,
-)
+from app.core import exceptions
 from app.logging_config import setup_logging
+from app.db.session import SessionLocal
+from app.services.permission import permission_service
+from app.core.config import settings
 
-# Apply logging configuration at startup
-setup_logging()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Handles application startup and shutdown events.
+    """
+    # On startup
+    print("--- Application Startup ---")
+    setup_logging()
+    
+    # Seed permissions into the database
+    db = SessionLocal()
+    try:
+        permission_service.seed_permissions(db)
+    finally:
+        db.close()
+        
+    yield
+    # On shutdown
+    print("--- Application Shutdown ---")
 
-# --- FastAPI App Initialization ---
+# Initialize the FastAPI application with the lifespan event handler and metadata
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    lifespan=lifespan
 )
 
-# --- Register Exception Handlers ---
-app.add_exception_handler(AppException, app_exception_handler)
-app.add_exception_handler(RequestValidationError, validation_exception_handler)
+# --- Add Exception Handlers ---
+exceptions.add_exception_handlers(app)
 
-# --- Include Main API Router ---
-# All routes are now managed in the api_router
+# --- Include API Router ---
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
