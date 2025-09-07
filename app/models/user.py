@@ -1,9 +1,8 @@
-# app/models/user.py
-
 from sqlalchemy import Column, String, Boolean, Enum
 from sqlalchemy.orm import relationship
 from app.models.base import BaseModel
-from app.models.enums.user import UserRole # Import from the new enum file
+from app.models.enums.user import UserRole
+from app.models.permission import user_permission_association
 
 class User(BaseModel):
     """
@@ -22,8 +21,16 @@ class User(BaseModel):
     # Bidirectional relationship with Contact
     contacts = relationship("Contact", back_populates="creator", cascade="all, delete-orphan")
 
+    # Many-to-Many relationship with Permission
+    permissions = relationship(
+        "Permission",
+        secondary=user_permission_association,
+        back_populates="users"
+    )
+
     def __repr__(self):
         """
         Provides a developer-friendly string representation of the User object.
         """
         return f"<User(id={self.id}, username='{self.username}', role='{self.role.value}')>"
+

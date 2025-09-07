@@ -1,9 +1,12 @@
 from fastapi import APIRouter, Depends, Body
 from sqlalchemy.orm import Session
 import uuid
+from typing import List
 
 from app.api import deps
 from app.schema.user import UserPublic, UserUpdate
+from app.schema.permission import PermissionPublic
+from app.schema.error import ErrorDetail
 from app.services.user import user_service
 from app.models.user import User
 
@@ -34,6 +37,7 @@ router = APIRouter()
         },
         401: {
             "description": "Unauthorized",
+            "model": ErrorDetail,
             "content": {
                 "application/json": {
                     "example": {
@@ -69,15 +73,14 @@ def read_current_user(
                         "full_name": "Johnathan Doe",
                         "phone_number": "0987654321",
                         "is_active": True,
-                        "role": "USER",
-                        "created_at": "2025-09-02T10:30:00Z",
-                        "updated_at": "2025-09-02T11:00:00Z"
+                        "role": "user",
                     }
                 }
             }
         },
         400: {
             "description": "Bad Request (e.g., phone number or username already registered)",
+            "model": ErrorDetail,
             "content": {
                 "application/json": {
                     "example": {
@@ -88,6 +91,7 @@ def read_current_user(
         },
         401: {
             "description": "Unauthorized",
+            "model": ErrorDetail,
             "content": {
                 "application/json": {
                     "example": {
@@ -109,3 +113,37 @@ def update_current_user(
     """
     user = user_service.update_user(db=db, user_to_update=current_user, user_in=user_in, current_user=current_user)
     return user
+
+
+@router.get(
+    "/me/permissions",
+    response_model=List[PermissionPublic],
+    summary="Get Current User's Permissions",
+    description="Fetches a list of all permissions assigned to the currently authenticated user.",
+    responses={
+        200: {
+            "description": "A list of the user's assigned permissions.",
+            "content": {
+                "application/json": {
+                    "example": [
+                        {"id": "a1b2c3d4-e5f6-7890-1234-567890abcdef", "name": "contact_read_all"},
+                    ]
+                }
+            }
+        },
+        401: {
+            "description": "Unauthorized. The user is not authenticated.",
+            "model": ErrorDetail,
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Not authenticated"}
+                }
+            }
+        },
+    }
+)
+def get_current_user_permissions(
+    current_user: User = Depends(deps.get_current_active_user)
+):
+    """Get the permissions of the currently logged-in user."""
+    return current_user.permissions

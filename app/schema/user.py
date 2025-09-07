@@ -1,6 +1,9 @@
 import uuid
 from pydantic import BaseModel, Field, EmailStr
 from app.models.enums.user import UserRole
+from typing import List
+
+from .permission import PermissionPublic
 
 # --- Base Schemas ---
 
@@ -22,8 +25,15 @@ class UserCreate(UserBase):
     """
     password: str = Field(..., min_length=8, example="a_strong_password")
 
-# --- Schemas for Updating Users ---
+# --- Schemas for Creating Admins (just used in create admin script) ---
+class AdminCreate(UserCreate):
+    """
+    Schema specifically for the create_admin script.
+    It inherits from UserCreate and adds the 'role' field, allowing an admin to be created.
+    """
+    role: UserRole = Field(..., example=UserRole.ADMIN)
 
+# --- Schemas for Updating Users ---
 class UserUpdate(BaseModel):
     """
     Schema for updating an existing user. All fields are optional.
@@ -44,6 +54,7 @@ class UserPublic(UserBase):
     """
     id: uuid.UUID = Field(..., example=uuid.uuid4())
     role: UserRole = Field(..., example=UserRole.USER)
+    permissions: List[PermissionPublic] = []
 
     class Config:
         from_attributes = True

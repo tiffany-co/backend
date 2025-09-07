@@ -1,12 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Response
 from sqlalchemy.orm import Session
 import uuid
 from typing import List
 
 from app.api import deps
 from app.schema.user import UserCreate, UserPublic, UserUpdate
+from app.schema.permission import PermissionPublic, UserPermissionCreate
+from app.schema.error import ErrorDetail
 from app.services.user import user_service
+from app.services.permission import permission_service
 from app.models.enums.user import UserRole
+from app.models.enums.permission import PermissionName
 from app.models.user import User
 
 router = APIRouter()
@@ -25,6 +29,7 @@ router = APIRouter()
         },
         401: {
             "description": "Unauthorized - The user is not authenticated.",
+            "model": ErrorDetail,
             "content": {
                 "application/json": {
                     "example": {"detail": "Not authenticated"}
@@ -33,6 +38,7 @@ router = APIRouter()
         },
         403: {
             "description": "Forbidden - The user does not have the required admin role.",
+            "model": ErrorDetail,
             "content": {
                 "application/json": {
                     "example": {"detail": "You do not have permission to access this resource"}
@@ -41,6 +47,7 @@ router = APIRouter()
         },
         409: {
             "description": "Conflict Error",
+            "model": ErrorDetail,
             "content": {"application/json": {"examples": {
                 "username_exists": {"summary": "Username already exists", "value": {"detail": "A user with this username already exists."}},
                 "phone_exists": {"summary": "Phone number already exists", "value": {"detail": "A user with this phone number already exists."}}
@@ -66,6 +73,7 @@ def create_user(
     responses={
         401: {
             "description": "Unauthorized - The user is not authenticated.",
+            "model": ErrorDetail,
             "content": {
                 "application/json": {
                     "example": {"detail": "Not authenticated"}
@@ -74,6 +82,7 @@ def create_user(
         },
         403: {
             "description": "Forbidden - The user does not have the required admin role.",
+            "model": ErrorDetail,
             "content": {
                 "application/json": {
                     "example": {"detail": "You do not have permission to access this resource"}
@@ -102,9 +111,10 @@ def read_users(
             "description": "Successful Response",
             "content": {"application/json": {"example": {"id": "a1b2c3d4-e5f6-7890-1234-567890abcdef", "username": "existinguser", "full_name": "Existing User", "phone_number": "5544332211", "is_active": True, "role": "USER", "created_at": "2025-09-01T10:00:00Z", "updated_at": "2025-09-01T10:00:00Z"}}},
         },
-        404: {"description": "User not found", "content": {"application/json": {"example": {"detail": "User not found"}}}},
+        404: {"description": "User not found", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "User not found"}}}},
         403: {
             "description": "Forbidden - The user does not have the required admin role.",
+            "model": ErrorDetail,
             "content": {
                 "application/json": {
                     "example": {"detail": "You do not have permission to access this resource"}
@@ -132,9 +142,10 @@ def read_user_by_id(
             "description": "Successful Response",
             "content": {"application/json": {"example": {"id": "a1b2c3d4-e5f6-7890-1234-567890abcdef", "username": "existinguser", "full_name": "Existing User", "phone_number": "5544332211", "is_active": True, "role": "USER", "created_at": "2025-09-01T10:00:00Z", "updated_at": "2025-09-01T10:00:00Z"}}},
         },
-        404: {"description": "User not found", "content": {"application/json": {"example": {"detail": "User not found"}}}},
+        404: {"description": "User not found", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "User not found"}}}},
         403: {
             "description": "Forbidden - The user does not have the required admin role.",
+            "model": ErrorDetail,
             "content": {
                 "application/json": {
                     "example": {"detail": "You do not have permission to access this resource"}
@@ -158,10 +169,10 @@ def read_user_by_username(
     description="Allows an administrator to update a non-admin user's information.",
     dependencies=[Depends(deps.require_role([UserRole.ADMIN]))],
     responses={
-        200: {"description": "Successful Response"},
-        403: {"description": "Forbidden", "content": {"application/json": {"example": {"detail": "Admins cannot update other admins."}}}},
-        404: {"description": "User not found"},
-        409: {"description": "Conflict Error"},
+        200: {"description": "Successful Response", "model": ErrorDetail},
+        403: {"description": "Forbidden", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "Admins cannot update other admins."}}}},
+        404: {"description": "User not found", "model": ErrorDetail},
+        409: {"description": "Conflict Error", "model": ErrorDetail},
     }
 )
 def update_user_by_id(
@@ -184,11 +195,11 @@ def update_user_by_id(
     dependencies=[Depends(deps.require_role([UserRole.ADMIN]))],
      responses={
         200: {"description": "User deleted successfully"},
-        403: {"description": "Forbidden", "content": {"application/json": {"examples": {
+        403: {"description": "Forbidden", "model": ErrorDetail, "content": {"application/json": {"examples": {
             "delete_admin": {"summary": "Cannot delete admin", "value": {"detail": "Admins cannot be deleted."}},
             "delete_self": {"summary": "Cannot delete self", "value": {"detail": "Users cannot delete themselves."}}
         }}}},
-        404: {"description": "User not found"},
+        404: {"description": "User not found", "model": ErrorDetail},
     }
 )
 def delete_user(
@@ -201,3 +212,77 @@ def delete_user(
     deleted_user = user_service.delete_user(db=db, user_id=user_id, current_user=current_user)
     return deleted_user
 
+@router.get(
+    "/{user_id}/permissions",
+    response_model=List[PermissionPublic],
+    summary="Get a User's Permissions (Admin Only)",
+    description="Fetches a list of all permissions assigned to a specific user.",
+    dependencies=[Depends(deps.require_role([UserRole.ADMIN]))],
+    responses={
+        200: {"description": "A list of the user's permissions."},
+        401: {"description": "Unauthorized", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "Not authenticated"}}}},
+        403: {"description": "Forbidden", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "The user does not have enough privileges"}}}},
+        404: {"description": "User not found", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "User with ID ... not found."}}}},
+    }
+)
+def get_user_permissions(user_id: uuid.UUID, db: Session = Depends(deps.get_db)):
+    user = user_service.get_user_by_id(db=db, user_id=user_id)
+    return user.permissions
+
+@router.post(
+    "/{user_id}/permissions",
+    response_model=UserPublic,
+    summary="Add a Permission to a User (Admin Only)",
+    description="Assigns a new permission to a specific user.",
+    dependencies=[Depends(deps.require_role([UserRole.ADMIN]))],
+    responses={
+        200: {
+            "description": "Permission added successfully. Returns the user's new list of all permissions.",
+            "content": {"application/json": {"example": [{"id": "a1b2c3d4...", "name": "contact_read_all", "created_at": "...", "updated_at": "..."}]}}
+        },
+        401: {"description": "Unauthorized", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "Not authenticated"}}}},
+        403: {"description": "Forbidden", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "Cannot modify the permissions of an admin user."}}}},
+        404: {"description": "User or Permission not found", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "Permission 'some_permission' not found."}}}},
+        409: {"description": "Conflict - User already has permission", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "User already has the permission 'contact_read_all'."}}}},
+    }
+)
+def add_permission_to_user(
+    user_id: uuid.UUID,
+    permission_in: UserPermissionCreate,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+):
+    user = permission_service.add_permission_to_user(
+        db=db, 
+        user_id=user_id, 
+        permission_name=permission_in.permission_name, 
+        current_user=current_user
+    )
+    return user
+
+@router.delete(
+    "/{user_id}/permissions/{permission_name}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Remove a Permission from a User (Admin Only)",
+    description="Removes a specific permission from a user.",
+    dependencies=[Depends(deps.require_role([UserRole.ADMIN]))],
+    responses={
+        204: {"description": "Permission removed successfully. No content is returned."},
+        401: {"description": "Unauthorized", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "Not authenticated"}}}},
+        403: {"description": "Forbidden", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "Cannot modify the permissions of an admin user."}}}},
+        404: {"description": "User or Permission not found", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "User does not have the permission 'contact_read_all'."}}}},
+    }
+)
+def remove_permission_from_user(
+    user_id: uuid.UUID,
+    permission_name: PermissionName,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+):
+    permission_service.remove_permission_from_user(
+        db=db,
+        user_id=user_id,
+        permission_name=permission_name,
+        current_user=current_user
+    )
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

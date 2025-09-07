@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1 import auth, contacts, saved_bank_accounts, items, health
+from app.api.v1 import auth, contacts, saved_bank_accounts, items, health, permissions
 from app.core.config import settings
 from app.api.v1 import users_admin, users_me
 
@@ -18,6 +18,8 @@ api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 api_router.include_router(users_me.router, prefix="/users", tags=["Users - Me"])
 # Include the router for admin-level user management
 api_router.include_router(users_admin.router, prefix="/users", tags=["Users - Admin"])
+
+api_router.include_router(permissions.router, prefix="/permissions", tags=["Permissions"])
 
 api_router.include_router(contacts.router, prefix="/contacts", tags=["Contacts"])
 api_router.include_router(

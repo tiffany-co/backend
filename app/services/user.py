@@ -1,13 +1,13 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 import uuid
-from typing import List
+from typing import List, Union
 
 from app.core.exceptions import AppException
 from app.models.user import User
 from app.models.enums.user import UserRole
 from app.repository.user import user_repo
-from app.schema.user import UserCreate, UserUpdate
+from app.schema.user import UserCreate, UserUpdate, AdminCreate
 from app.core.security import get_password_hash
 from app.logging_config import audit_logger
 
@@ -40,7 +40,7 @@ class UserService:
         """Get all users from the database."""
         return user_repo.get_multi(db, skip=skip, limit=limit)
 
-    def create_user(self, db: Session, *, user_in: UserCreate) -> User:
+    def create_user(self, db: Session, *, user_in: Union[UserCreate, AdminCreate]) -> User:
         """
         Handles the business logic for creating a new user.
         New users are always created with the 'USER' role by default.
@@ -58,8 +58,10 @@ class UserService:
 
         user_data_for_db = user_in.model_dump()
         user_data_for_db["hashed_password"] = get_password_hash(user_in.password)
-        user_data_for_db["role"] = UserRole.USER
         del user_data_for_db["password"]
+        
+        if "role" not in user_data_for_db:
+            user_data_for_db["role"] = UserRole.USER
         
         db_user = user_repo.create(db, obj_in=user_data_for_db)
         audit_logger.info(f"User '{db_user.username}' (ID: {db_user.id}) created.")
