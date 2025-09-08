@@ -27,6 +27,10 @@ class ContactService:
             )
         return contact
 
+    def get_all_contacts(self, db: Session, *, skip: int = 0, limit: int = 100) -> List[Contact]:
+        """Gets a paginated list of all contacts."""
+        return contact_repo.get_multi(db, skip=skip, limit=limit)
+
     def create_contact(self, db: Session, *, contact_in: ContactCreate, current_user: User) -> Contact:
         """Handles the business logic for creating a new contact with validation."""
         # --- Check for duplicate phone number ---
@@ -83,6 +87,15 @@ class ContactService:
         updated_contact = contact_repo.update(db, db_obj=contact_to_update, obj_in=contact_in)
         audit_logger.info(f"Contact '{updated_contact.first_name} {updated_contact.last_name}' updated by user '{current_user.username}'.")
         return updated_contact
+    
+    def delete_contact(self, db: Session, *, contact_id: uuid.UUID, current_user: User) -> Contact:
+        """Handles the business logic for deleting a contact."""
+        contact_to_delete = self.get_contact_by_id(db, contact_id=contact_id)
+        
+        deleted_contact = contact_repo.remove(db, id=contact_id)
+        
+        audit_logger.info(f"Contact '{contact_to_delete.first_name} {contact_to_delete.last_name}' (ID: {contact_id}) deleted by user '{current_user.username}'.")
+        return deleted_contact
 
     def search_contacts(
         self,

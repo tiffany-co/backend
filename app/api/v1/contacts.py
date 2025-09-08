@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, status, Query
+from fastapi import APIRouter, Depends, status, Query, Response
 from sqlalchemy.orm import Session
 import uuid
 from typing import List, Optional
 
 from app.api import deps
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.models.enums.contact import ContactType
 from app.models.enums.permission import PermissionName
 from app.schema.contact import ContactCreate, ContactPublic, ContactUpdate
@@ -33,6 +33,26 @@ def create_contact(
 ):
     """Endpoint to create a new contact, assigned to the current user."""
     return contact_service.create_contact(db=db, contact_in=contact_in, current_user=current_user)
+
+
+@router.get(
+    "/",
+    response_model=List[ContactPublic],
+    summary="Get all contacts",
+    description="Allows an authenticated user to retrieve a paginated list of all contacts.",
+    responses={
+        200: {"description": "A list of contacts."},
+        401: {"description": "Unauthorized.", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "Not authenticated"}}}},
+    }
+)
+def read_all_contacts(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+    skip: int = Query(0, ge=0, description="Number of records to skip."),
+    limit: int = Query(100, ge=1, le=200, description="Number of records to return."),
+):
+    """Endpoint to retrieve all contacts."""
+    return contact_service.get_all_contacts(db, skip=skip, limit=limit)
 
 
 @router.get(
@@ -118,3 +138,24 @@ def update_contact(
     """Endpoint to update a contact's details with permission checks."""
     return contact_service.update_contact(db=db, contact_id=contact_id, contact_in=contact_in, current_user=current_user)
 
+
+@router.delete(
+    "/{contact_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete a contact (Admin Only)",
+    description="Allows an administrator to delete a contact from the system.",
+    responses={
+        204: {"description": "Contact deleted successfully. No content is returned."},
+        401: {"description": "Unauthorized.", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "Not authenticated"}}}},
+        403: {"description": "Forbidden. User is not an admin.", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "You do not have permission to access this resource"}}}},
+        404: {"description": "Contact not found.", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "Contact with ID a1b2c3d4-e5f6-7890-1234-567890abcdef not found."}}}},
+    }
+)
+def delete_contact(
+    contact_id: uuid.UUID,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.require_role([UserRole.ADMIN])),
+):
+    """Admin-only endpoint to delete a contact."""
+    contact_service.delete_contact(db, contact_id=contact_id, current_user=current_user)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
