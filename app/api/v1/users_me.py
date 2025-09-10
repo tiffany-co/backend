@@ -126,7 +126,7 @@ def update_current_user(
             "content": {
                 "application/json": {
                     "example": [
-                        {"id": "a1b2c3d4-e5f6-7890-1234-567890abcdef", "name": "contact_read_all"},
+                        {"id": "a1b2c3d4-e5f6-7890-1234-567890abcdef", "name": "contact_update_all"},
                     ]
                 }
             }

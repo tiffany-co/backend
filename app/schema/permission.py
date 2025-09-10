@@ -17,5 +17,5 @@ class UserPermissionCreate(BaseModel):
     """
     Schema for adding a permission to a user.
     """
-    permission_name: PermissionName = Field(..., example=PermissionName.CONTACT_READ_ALL)
+    permission_name: PermissionName = Field(..., example=PermissionName.CONTACT_UPDATE_ALL)
 
