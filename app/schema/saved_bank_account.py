@@ -1,23 +1,48 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional
+
 from .base import BaseSchema
 
-# --- Saved Bank Account Schemas ---
-
-# Base properties for a saved bank account.
 class SavedBankAccountBase(BaseModel):
-    name: str = Field(..., max_length=100)
-    description: Optional[str] = Field(None, max_length=255)
+    """
+    Base schema for saved bank account data.
+    """
+    name: str = Field(..., min_length=2, max_length=100, example="Main Business Account")
+    # --- UPDATED: description is now optional ---
+    description: Optional[str] = Field(None, max_length=500, example="Primary account for daily transactions.")
+    # --- NEW: Added card_number with validation ---
+    card_number: Optional[str] = Field(None, min_length=16, max_length=16, example="1111222233334444")
 
-# Properties required for creating a new bank account.
+    @field_validator("card_number")
+    def validate_card_number_is_digits(cls, v):
+        """Ensures the card number contains only digits."""
+        if v is not None and not v.isdigit():
+            raise ValueError("Card number must contain only digits.")
+        return v
+
 class SavedBankAccountCreate(SavedBankAccountBase):
+    """Schema for creating a new saved bank account."""
     pass
 
-# Properties allowed for updating a bank account. All fields are optional.
 class SavedBankAccountUpdate(BaseModel):
-    name: Optional[str] = Field(None, max_length=100)
-    description: Optional[str] = Field(None, max_length=255)
+    """
+    Schema for updating a saved bank account. All fields are optional.
+    """
+    name: Optional[str] = Field(None, min_length=2, max_length=100, example="Updated Business Account")
+    description: Optional[str] = Field(None, max_length=500, example="Updated description.")
+    card_number: Optional[str] = Field(None, min_length=16, max_length=16, example="5555666677778888")
 
-# Public representation of a SavedBankAccount.
-class SavedBankAccountPublic(BaseSchema, SavedBankAccountBase):
-    pass
+    @field_validator("card_number")
+    def validate_card_number_is_digits(cls, v):
+        """Ensures the card number contains only digits on update."""
+        if v is not None and not v.isdigit():
+            raise ValueError("Card number must contain only digits.")
+        return v
+        
+class SavedBankAccountPublic(SavedBankAccountBase, BaseSchema):
+    """
+    Schema for publicly available saved bank account information.
+    """
+    class Config:
+        from_attributes = True
+

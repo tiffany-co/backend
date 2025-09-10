@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String
+from sqlalchemy import Column, String, Text
 from app.models.base import BaseModel
 
 class SavedBankAccount(BaseModel):
@@ -8,8 +8,9 @@ class SavedBankAccount(BaseModel):
     """
     __tablename__ = "saved_bank_account"
 
-    name = Column(String, index=True, nullable=False)
-    description = Column(String, nullable=True)
+    name = Column(String, nullable=False, index=True)
+    description = Column(Text, nullable=True)
+    card_number = Column(String, nullable=True, unique=True, index=True)
 
     def __repr__(self):
         return f"<SavedBankAccount(id={self.id}, name='{self.name}')>"
