@@ -17,6 +17,6 @@
 
 - database migration after all modifications:
     ```bash
-    make db-migration
+    make db-migrate
     make db-upgrade
     ```
