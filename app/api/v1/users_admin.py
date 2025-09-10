@@ -238,12 +238,12 @@ def get_user_permissions(user_id: uuid.UUID, db: Session = Depends(deps.get_db))
     responses={
         200: {
             "description": "Permission added successfully. Returns the user's new list of all permissions.",
-            "content": {"application/json": {"example": [{"id": "a1b2c3d4...", "name": "contact_read_all", "created_at": "...", "updated_at": "..."}]}}
+            "content": {"application/json": {"example": [{"id": "a1b2c3d4...", "name": "contact_update_all", "created_at": "...", "updated_at": "..."}]}}
         },
         401: {"description": "Unauthorized", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "Not authenticated"}}}},
         403: {"description": "Forbidden", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "Cannot modify the permissions of an admin user."}}}},
         404: {"description": "User or Permission not found", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "Permission 'some_permission' not found."}}}},
-        409: {"description": "Conflict - User already has permission", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "User already has the permission 'contact_read_all'."}}}},
+        409: {"description": "Conflict - User already has permission", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "User already has the permission 'contact_update_all'."}}}},
     }
 )
 def add_permission_to_user(
@@ -270,7 +270,7 @@ def add_permission_to_user(
         204: {"description": "Permission removed successfully. No content is returned."},
         401: {"description": "Unauthorized", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "Not authenticated"}}}},
         403: {"description": "Forbidden", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "Cannot modify the permissions of an admin user."}}}},
-        404: {"description": "User or Permission not found", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "User does not have the permission 'contact_read_all'."}}}},
+        404: {"description": "User or Permission not found", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "User does not have the permission 'contact_update_all'."}}}},
     }
 )
 def remove_permission_from_user(
