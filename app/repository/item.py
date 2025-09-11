@@ -1,12 +1,15 @@
+from sqlalchemy.orm import Session
+from app.repository.base import BaseRepository
 from app.models.item import Item
 from app.schema.item import ItemCreate, ItemUpdate
-from .base import BaseRepository
 
 class ItemRepository(BaseRepository[Item, ItemCreate, ItemUpdate]):
     """
-    Repository for Item model operations.
+    Repository for item-related database operations.
     """
-    pass
+    def get_by_name(self, db: Session, *, name: str) -> Item | None:
+        """Get an item by its unique name."""
+        return db.query(self.model).filter(self.model.name == name).first()
 
-# Create a single, importable instance of the repository.
 item_repo = ItemRepository(Item)
+
