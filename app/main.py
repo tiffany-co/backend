@@ -7,7 +7,9 @@ from app.core import exceptions
 from app.logging_config import setup_logging
 from app.db.session import SessionLocal
 from app.services.permission import permission_service
+from app.services.seeder import seed_items
 from app.core.config import settings
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -22,6 +24,7 @@ async def lifespan(app: FastAPI):
     db = SessionLocal()
     try:
         permission_service.seed_permissions(db)
+        seed_items(db)
     finally:
         db.close()
         
