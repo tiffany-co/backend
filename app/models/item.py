@@ -1,26 +1,29 @@
-from sqlalchemy import Column, String, Boolean, Enum, BigInteger
+from sqlalchemy import Column, String, Enum, Numeric
 from app.models.base import BaseModel
-from app.models.enums.item import ItemType
+from .enums.mesurement import MeasurementType
+from .enums.transaction import TransactionType
 
 class Item(BaseModel):
     """
-    Represents an item or product in the gold shop.
-    This model maps to the 'item' table.
+    Represents an item template in the system.
+    This model defines the default properties for categories of items
+    that can be bought or sold in transactions.
     """
     __tablename__ = "item"
 
-    name = Column(String, nullable=False, index=True)
+    name = Column(String, nullable=False, unique=True, index=True)
     category = Column(String, nullable=False, index=True)
-    description = Column(String, nullable=True)
-    type = Column(Enum(ItemType), nullable=False, default=ItemType.UNCOUNTABLE)
     
-    # Default values for transactions, stored as integers.
-    karat_default = Column(BigInteger, nullable=False, default=750)
-    ojrat_default = Column(BigInteger, nullable=False, default=0)
-    profit_default = Column(BigInteger, nullable=False, default=0)
-    tax_default = Column(BigInteger, nullable=False, default=0)
+    measurement_type = Column(Enum(MeasurementType), nullable=False)
+    # The default transaction type can suggest if this item is typically bought or sold.
+    transaction_type = Column(Enum(TransactionType), nullable=False)
 
-    is_active = Column(Boolean, default=True)
+    # Default financial properties. These are Numeric to handle decimal values accurately.
+    karat_default = Column(Numeric(10, 2), nullable=True)
+    ojrat_default = Column(Numeric(10, 2), nullable=True)
+    profit_default = Column(Numeric(10, 2), nullable=True)
+    tax_default = Column(Numeric(10, 2), nullable=True)
 
     def __repr__(self):
-        return f"<Item(id={self.id}, name='{self.name}', type='{self.type.value}')>"
+        return f"<Item(name='{self.name}', category='{self.category}')>"
+

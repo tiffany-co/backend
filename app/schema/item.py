@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 from .base import BaseSchema
-from app.models.enums.item import ItemType
+from backend.app.models.enums.mesurement import ItemType
 
 # --- Item Schemas ---
 
