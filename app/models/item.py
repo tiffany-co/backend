@@ -14,9 +14,9 @@ class Item(BaseModel):
     name = Column(String, nullable=False, unique=True, index=True)
     category = Column(String, nullable=False, index=True)
     
-    measurement_type = Column(Enum(MeasurementType), nullable=False)
+    measurement_type = Column(Enum(MeasurementType, native_enum=False), nullable=False)
     # The default transaction type can suggest if this item is typically bought or sold.
-    transaction_type = Column(Enum(TransactionType), nullable=False)
+    transaction_type = Column(Enum(TransactionType, native_enum=False), nullable=False)
 
     # Default financial properties. These are Numeric to handle decimal values accurately.
     karat_default = Column(Numeric(10, 2), nullable=True)
