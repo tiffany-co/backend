@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field, EmailStr
 from app.models.enums.user import UserRole
 from typing import List
 
-from .permission import PermissionPublic
+from .permission import PermissionPublic, PermissionInUser
 
 # --- Base Schemas ---
 
@@ -59,3 +59,14 @@ class UserPublic(UserBase):
     class Config:
         from_attributes = True
 
+class UserInList(UserBase):
+    """
+    A specialized public schema for user lists.
+    It includes a minimal representation of permissions (name only).
+    """
+    id: uuid.UUID = Field(..., example=uuid.uuid4())
+    role: UserRole
+    permissions: List[PermissionInUser] = [] # Uses the new lightweight schema
+
+    class Config:
+        from_attributes = True

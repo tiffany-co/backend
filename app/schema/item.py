@@ -3,8 +3,9 @@ from typing import Optional
 from decimal import Decimal
 
 from .base import BaseSchema
-from backend.app.models.enums.measurement import MeasurementType
-from app.models.enums.transaction import TransactionType
+from ..models.enums.measurement import MeasurementType
+from ..models.enums.transaction import TransactionType
+from ..models.enums.inventory_columns import InventoryColumnName # Import the new enum
 
 class ItemBase(BaseModel):
     """
@@ -14,7 +15,7 @@ class ItemBase(BaseModel):
     category: str = Field(..., min_length=2, max_length=50)
     description: Optional[str] = Field(None, max_length=500)
     is_active: bool = Field(True)
-    inventory_column_name: str = Field(...)
+    inventory_column_name: InventoryColumnName
     display_name_fa: str = Field(...)
     measurement_type: MeasurementType
     transaction_type: TransactionType
@@ -34,7 +35,7 @@ class ItemUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=2, max_length=100)
     category: Optional[str] = Field(None, min_length=2, max_length=50)
     description: Optional[str] = Field(None, max_length=500)
-    is_active: Optional[bool] = Field(None) # Added is_active
+    is_active: Optional[bool] = Field(None)
     display_name_fa: Optional[str] = Field(None)
     measurement_type: Optional[MeasurementType] = None
     transaction_type: Optional[TransactionType] = None

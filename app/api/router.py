@@ -27,4 +27,4 @@ api_router.include_router(
     prefix="/bank-accounts",
     tags=["Saved Bank Accounts"],
 )
-api_router.include_router(items.router, prefix="/items", tags=["Items"])
+# api_router.include_router(items.router, prefix="/items", tags=["Items"])

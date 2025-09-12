@@ -4,8 +4,6 @@ from app.models.enums.transaction import TransactionType
 from app.models.enums.inventory_columns import InventoryColumnName
 
 # This file contains the raw data for items to be seeded into the database.
-# Each item now includes its corresponding inventory column and Persian display name.
-
 PREDEFINED_ITEMS = [
     ItemCreate(
         name="New Gold Jewelry",
@@ -60,4 +58,3 @@ PREDEFINED_ITEMS = [
         karat_default=999
     ),
 ]
-

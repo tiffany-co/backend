@@ -7,7 +7,7 @@ from app.core import exceptions
 from app.logging_config import setup_logging
 from app.db.session import SessionLocal
 from app.services.permission import permission_service
-from app.services.seeder import seed_items
+from seeding.seeder import seed_all
 from app.core.config import settings
 
 
@@ -23,8 +23,8 @@ async def lifespan(app: FastAPI):
     # Seed permissions into the database
     db = SessionLocal()
     try:
-        permission_service.seed_permissions(db)
-        seed_items(db)
+        seed_all(db)
+        yield
     finally:
         db.close()
         
