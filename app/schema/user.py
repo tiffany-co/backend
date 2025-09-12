@@ -1,9 +1,10 @@
 import uuid
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, field_serializer
 from app.models.enums.user import UserRole
-from typing import List
+from typing import List, Optional, Any
 
-from .permission import PermissionPublic, PermissionInUser
+from app.models.permission import Permission # Import the DB model for the serializer
+from .permission import PermissionPublic
 
 # --- Base Schemas ---
 
@@ -39,11 +40,11 @@ class UserUpdate(BaseModel):
     Schema for updating an existing user. All fields are optional.
     The 'role' is intentionally omitted to prevent it from being changed via this schema.
     """
-    username: str | None = Field(None, min_length=3, max_length=50, example="new_johndoe")
-    full_name: str | None = Field(None, min_length=3, max_length=100, example="Johnathan Doe")
-    phone_number: str | None = Field(None, min_length=10, max_length=15, example="0987654321")
-    password: str | None = Field(None, min_length=8, example="a_new_strong_password")
-    is_active: bool | None = Field(None, example=True)
+    username: Optional[str] = Field(None, min_length=3, max_length=50, example="new_johndoe")
+    full_name: Optional[str] = Field(None, min_length=3, max_length=100, example="Johnathan Doe")
+    phone_number: Optional[str] = Field(None, min_length=10, max_length=15, example="0987654321")
+    password: Optional[str] = Field(None, min_length=8, example="a_new_strong_password")
+    is_active: Optional[bool] = Field(None, example=True)
 
 # --- Schemas for Public Responses ---
 
@@ -66,7 +67,15 @@ class UserInList(UserBase):
     """
     id: uuid.UUID = Field(..., example=uuid.uuid4())
     role: UserRole
-    permissions: List[PermissionInUser] = [] # Uses the new lightweight schema
+    permissions: List[PermissionPublic] = []
+    
+    @field_serializer('permissions')
+    def serialize_permissions(self, perms: List[Permission]) -> List[str]:
+        """
+        This function is called by Pydantic before sending the response.
+        It converts the list of Permission database objects into a simple list of their string names.
+        """
+        return [p.name.value for p in perms]
 
     class Config:
         from_attributes = True
