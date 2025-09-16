@@ -1,8 +1,19 @@
-from sqlalchemy import Column, String, Boolean, Enum
+from sqlalchemy import Column, String, Boolean, Enum, Table, ForeignKey
 from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.postgresql import UUID
+
 from app.models.base import BaseModel
 from app.models.enums.user import UserRole
-from app.models.permission import user_permission_association
+from app.db.session import Base
+
+# This is the correct place for the association table, as it defines the link
+# between Users and Permissions.
+user_permission_association = Table(
+    "user_permission",
+    Base.metadata,
+    Column("user_id", UUID(as_uuid=True), ForeignKey("user.id"), primary_key=True),
+    Column("permission_id", UUID(as_uuid=True), ForeignKey("permission.id"), primary_key=True),
+)
 
 class User(BaseModel):
     """
@@ -25,7 +36,8 @@ class User(BaseModel):
     permissions = relationship(
         "Permission",
         secondary=user_permission_association,
-        back_populates="users"
+        back_populates="users",
+        lazy="selectin"
     )
 
     def __repr__(self):

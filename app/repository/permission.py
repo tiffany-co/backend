@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from typing import List, Type, Any
+from typing import List, Any
 
 from app.repository.base import BaseRepository
 from app.models.permission import Permission

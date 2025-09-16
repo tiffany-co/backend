@@ -1,95 +1,118 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status, Query
 from sqlalchemy.orm import Session
-from typing import List
 import uuid
+from typing import List, Optional
 
 from app.api import deps
-from app.models.user import UserRole
-from app.schema.item import ItemCreate, ItemPublic, ItemUpdate
+from app.models.user import User, UserRole
+from app.models.enums.measurement import MeasurementType
+from app.schema.item import ItemUpdate, ItemInList, ItemInListWithProfiles, ItemWithProfilesPublic
+from app.schema.error import ErrorDetail
 from app.services.item import item_service
-from app.repository.item import item_repo
 
 router = APIRouter()
 
-# Dependency for requiring admin role
-require_admin = deps.require_role([UserRole.ADMIN])
-
-@router.post(
+@router.get(
     "/",
-    response_model=ItemPublic,
-    status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(require_admin)],
+    response_model=List[ItemInList],
+    summary="Get All Items",
+    description="Allows any authenticated user to retrieve a list of all defined item types. This view excludes timestamps.",
+    responses={
+        200: {"description": "A list of items."},
+        401: {"model": ErrorDetail, "description": "Unauthorized"},
+    }
 )
-def create_item(*, db: Session = Depends(deps.get_db), item_in: ItemCreate):
-    """
-    Create a new item. (Admin only)
-    """
-    return item_service.create(db=db, obj_in=item_in)
-
-@router.get("/", response_model=List[ItemPublic])
 def read_all_items(
     db: Session = Depends(deps.get_db),
-    skip: int = 0,
-    limit: int = 100,
-    current_user=Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_user),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=200),
 ):
-    """
-    Retrieve all items. (All authenticated users)
-    """
-    return item_repo.get_multi(db, skip=skip, limit=limit)
+    return item_service.get_all(db, skip=skip, limit=limit)
 
-@router.get("/{item_id}", response_model=ItemPublic)
+@router.get(
+    "/with-profiles",
+    response_model=List[ItemInListWithProfiles],
+    summary="Get All Items with Financial Profiles",
+    description="Retrieves all items, with their nested financial profiles for buying and selling.",
+    responses={
+        200: {"description": "A list of items with their financial profiles."},
+        401: {"model": ErrorDetail, "description": "Unauthorized"},
+    }
+)
+def read_all_items_with_profiles(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+):
+    return item_service.get_all(db, limit=1000)
+
+@router.get(
+    "/search",
+    response_model=List[ItemInListWithProfiles],
+    summary="Search for items",
+    description="Allows an authenticated user to search for items using various criteria.",
+    responses={
+        200: {"description": "A list of items matching the search criteria."},
+        401: {"description": "Unauthorized.", "model": ErrorDetail},
+    }
+)
+def search_contacts(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+    name_fa: Optional[str] = Query(None, description="Search by persian name (case-insensitive, partial match)."),
+    category: Optional[str] = Query(None, description="Search by category (case-insensitive, partial match)."),
+    measurement_type: Optional[MeasurementType] = Query(None, description="Filter by measurement type [COUNTABLE/UNCOUNTABLE]."),
+    is_active: Optional[bool] = Query(None, description="Filter by is activation [True/False]."),
+    skip: int = Query(0, ge=0, description="Number of records to skip."),
+    limit: int = Query(100, ge=1, le=200, description="Number of records to return."),
+):
+    """Endpoint for searching and filtering contacts."""
+    return item_service.search(
+        db,
+        name_fa=name_fa,
+        category=category,
+        measurement_type=measurement_type,
+        is_active=is_active,
+        skip=skip,
+        limit=limit
+    )
+
+@router.get(
+    "/{item_id}",
+    response_model=ItemWithProfilesPublic,
+    summary="Get Item by ID",
+    description="Allows any authenticated user to fetch a single item by its ID. This view includes timestamps.",
+     responses={
+        200: {"description": "The requested item."},
+        401: {"model": ErrorDetail, "description": "Unauthorized"},
+        404: {"model": ErrorDetail, "description": "Item not found"},
+    }
+)
 def read_item_by_id(
     item_id: uuid.UUID,
     db: Session = Depends(deps.get_db),
-    current_user=Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_user),
 ):
-    """
-    Retrieve a specific item by its ID. (All authenticated users)
-    """
-    item = item_repo.get(db, id=item_id)
-    if not item:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
-        )
-    return item
+    return item_service.get_by_id(db, item_id=item_id)
+
 
 @router.put(
     "/{item_id}",
-    response_model=ItemPublic,
-    dependencies=[Depends(require_admin)],
+    response_model=ItemWithProfilesPublic,
+    summary="[Admin] Update Item Metadata",
+    description="Allows an administrator to update an item's metadata (e.g., Persian name, category, description).",
+    responses={
+        200: {"description": "Item updated successfully."},
+        401: {"model": ErrorDetail, "description": "Unauthorized"},
+        403: {"model": ErrorDetail, "description": "Forbidden"},
+        404: {"model": ErrorDetail, "description": "Item not found"},
+    }
 )
 def update_item(
     item_id: uuid.UUID,
     item_in: ItemUpdate,
     db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.require_role([UserRole.ADMIN])),
 ):
-    """
-    Update an item. (Admin only)
-    """
-    item = item_repo.get(db, id=item_id)
-    if not item:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
-        )
-    return item_service.update(db=db, db_obj=item, obj_in=item_in)
+    return item_service.update(db=db, item_id=item_id, item_in=item_in, current_user=current_user)
 
-@router.delete(
-    "/{item_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    dependencies=[Depends(require_admin)],
-)
-def delete_item(
-    item_id: uuid.UUID,
-    db: Session = Depends(deps.get_db),
-):
-    """
-    Delete an item. (Admin only)
-    """
-    item = item_repo.get(db, id=item_id)
-    if not item:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
-        )
-    item_repo.remove(db, id=item_id)
-    return

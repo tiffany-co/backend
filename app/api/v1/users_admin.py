@@ -4,7 +4,7 @@ import uuid
 from typing import List
 
 from app.api import deps
-from app.schema.user import UserCreate, UserPublic, UserUpdate
+from app.schema.user import UserCreate, UserPublic, UserUpdate, UserInList
 from app.schema.permission import PermissionPublic, UserPermissionCreate
 from app.schema.error import ErrorDetail
 from app.services.user import user_service
@@ -66,7 +66,7 @@ def create_user(
 
 @router.get(
     "/",
-    response_model=List[UserPublic],
+    response_model=List[UserInList],
     summary="Get All Users (Admin Only)",
     description="Allows an administrator to retrieve a paginated list of all users.",
     dependencies=[Depends(deps.require_role([UserRole.ADMIN]))],

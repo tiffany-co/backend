@@ -7,7 +7,9 @@ from app.core import exceptions
 from app.logging_config import setup_logging
 from app.db.session import SessionLocal
 from app.services.permission import permission_service
+from seeding.seeder import seed_all
 from app.core.config import settings
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -21,12 +23,11 @@ async def lifespan(app: FastAPI):
     # Seed permissions into the database
     db = SessionLocal()
     try:
-        permission_service.seed_permissions(db)
+        seed_all(db)
     finally:
         db.close()
         
     yield
-    # On shutdown
     print("--- Application Shutdown ---")
 
 # Initialize the FastAPI application with the lifespan event handler and metadata
