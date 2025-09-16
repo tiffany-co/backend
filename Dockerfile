@@ -27,6 +27,7 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 COPY ./app /app/app
 COPY ./alembic /app/alembic
 COPY ./scripts /app/scripts
+COPY ./seeding /app/seeding
 COPY alembic.ini /app/
 COPY ./entrypoint.sh /app/entrypoint.sh
 
