@@ -10,6 +10,7 @@ from app.db.session import Base
 from app.models.user import User
 from app.models.contact import Contact
 from app.models.permission import Permission
-from app.models.item import Item
 from app.models.saved_bank_account import SavedBankAccount
-
+from app.models.item import Item
+from app.models.item_financial_profile import ItemFinancialProfile
+# TODO adding inventory

@@ -5,7 +5,7 @@ from typing import List
 
 from app.api import deps
 from app.models.user import User, UserRole
-from app.schema.item import ItemPublic, ItemUpdate
+from app.schema.item import ItemUpdate, ItemInList, ItemInListWithProfiles, ItemWithProfilesPublic
 from app.schema.error import ErrorDetail
 from app.services.item import item_service
 
@@ -13,11 +13,11 @@ router = APIRouter()
 
 @router.get(
     "/",
-    response_model=List[ItemPublic],
-    summary="Get All Item Templates",
-    description="Allows any authenticated user to retrieve a paginated list of all item templates.",
-     responses={
-        200: {"description": "A list of item templates."},
+    response_model=List[ItemInList],
+    summary="Get All Items",
+    description="Allows any authenticated user to retrieve a list of all defined item types. This view excludes timestamps.",
+    responses={
+        200: {"description": "A list of items."},
         401: {"model": ErrorDetail, "description": "Unauthorized"},
     }
 )
@@ -29,16 +29,32 @@ def read_all_items(
 ):
     return item_service.get_all(db, skip=skip, limit=limit)
 
+@router.get(
+    "/with-profiles",
+    response_model=List[ItemInListWithProfiles],
+    summary="Get All Items with Financial Profiles",
+    description="Retrieves all items, with their nested financial profiles for buying and selling.",
+    responses={
+        200: {"description": "A list of items with their financial profiles."},
+        401: {"model": ErrorDetail, "description": "Unauthorized"},
+    }
+)
+def read_all_items_with_profiles(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+):
+    return item_service.get_all(db, limit=1000)
+
 
 @router.get(
     "/{item_id}",
-    response_model=ItemPublic,
-    summary="Get Item Template by ID",
-    description="Allows any authenticated user to fetch a single item template by its ID.",
+    response_model=ItemWithProfilesPublic,
+    summary="Get Item by ID",
+    description="Allows any authenticated user to fetch a single item by its ID. This view includes timestamps.",
      responses={
-        200: {"description": "The requested item template."},
+        200: {"description": "The requested item."},
         401: {"model": ErrorDetail, "description": "Unauthorized"},
-        404: {"model": ErrorDetail, "description": "Item template not found"},
+        404: {"model": ErrorDetail, "description": "Item not found"},
     }
 )
 def read_item_by_id(
@@ -51,15 +67,14 @@ def read_item_by_id(
 
 @router.put(
     "/{item_id}",
-    response_model=ItemPublic,
-    summary="[Admin] Update Item Template",
-    description="Allows an administrator to update an item template's defaults.",
+    response_model=ItemWithProfilesPublic,
+    summary="[Admin] Update Item Metadata",
+    description="Allows an administrator to update an item's metadata (e.g., Persian name, category, description).",
     responses={
-        200: {"description": "Item template updated successfully."},
+        200: {"description": "Item updated successfully."},
         401: {"model": ErrorDetail, "description": "Unauthorized"},
         403: {"model": ErrorDetail, "description": "Forbidden"},
-        404: {"model": ErrorDetail, "description": "Item template not found"},
-        409: {"model": ErrorDetail, "description": "Conflict (e.g., name already exists)"},
+        404: {"model": ErrorDetail, "description": "Item not found"},
     }
 )
 def update_item(

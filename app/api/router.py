@@ -1,8 +1,17 @@
 from fastapi import APIRouter
-from app.api.v1 import auth, contacts, saved_bank_accounts, items, health, permissions
 from app.core.config import settings
-from app.api.v1 import users_admin, users_me
-
+from app.api.v1 import (
+    auth,
+    contacts,
+    saved_bank_accounts,
+    health,
+    permissions,
+    items,
+    item_financial_profiles,
+    # inventory, # Inventory is disabled for now
+    users_me,
+    users_admin
+)
 # --- Main API Router ---
 # This router includes all the version 1 routers.
 # It's the single entry point for all API routes that will be included in the main app.
@@ -27,4 +36,11 @@ api_router.include_router(
     prefix="/bank-accounts",
     tags=["Saved Bank Accounts"],
 )
-# api_router.include_router(items.router, prefix="/items", tags=["Items"])
+
+# Item and Financial Profile Management
+api_router.include_router(items.router, prefix="/items", tags=["Items"])
+api_router.include_router(
+    item_financial_profiles.router, 
+    prefix="/financial-profiles", 
+    tags=["Item Financial Profiles"]
+)

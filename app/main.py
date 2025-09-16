@@ -24,12 +24,10 @@ async def lifespan(app: FastAPI):
     db = SessionLocal()
     try:
         seed_all(db)
-        yield
     finally:
         db.close()
         
     yield
-    # On shutdown
     print("--- Application Shutdown ---")
 
 # Initialize the FastAPI application with the lifespan event handler and metadata

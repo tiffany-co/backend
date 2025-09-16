@@ -1,53 +1,58 @@
 from pydantic import BaseModel, Field
-from typing import Optional
-from decimal import Decimal
+from typing import Optional, List
+import uuid
 
 from .base import BaseSchema
 from ..models.enums.measurement import MeasurementType
-from ..models.enums.transaction import TransactionType
-from ..models.enums.inventory_columns import InventoryColumnName # Import the new enum
+from .item_financial_profile import ItemFinancialProfilePublic, ItemFinancialProfileUpdate, ItemFinancialProfileInList
+# --- Base and Public Schemas ---
 
 class ItemBase(BaseModel):
-    """
-    Base schema for item data.
-    """
-    name: str = Field(..., min_length=2, max_length=100)
-    category: str = Field(..., min_length=2, max_length=50)
-    description: Optional[str] = Field(None, max_length=500)
-    is_active: bool = Field(True)
-    inventory_column_name: InventoryColumnName
-    display_name_fa: str = Field(...)
+    """Base schema for core item data."""
+    name: str = Field(..., example="Emami Coin")
+    name_fa: str = Field(..., example="سکه امامی")
+    category: str = Field(..., example="Coin")
+    description: Optional[str] = Field(None, example="Standard Emami gold coins.")
     measurement_type: MeasurementType
-    transaction_type: TransactionType
-    karat_default: Optional[Decimal] = Field(None, ge=0)
-    ojrat_default: Optional[Decimal] = Field(None, ge=0)
-    profit_default: Optional[Decimal] = Field(None, ge=0)
-    tax_default: Optional[Decimal] = Field(None, ge=0)
+    is_active: bool = Field(True)
 
 class ItemCreate(ItemBase):
-    """Schema for creating a new item template (used by seeder)."""
+    """Schema for creating a new item (used by seeder)."""
     pass
 
-class ItemUpdate(BaseModel):
+# --- Schemas for different API responses ---
+class ItemInList(ItemBase):
     """
-    Schema for updating an item template. All fields are optional.
+    Schema for representing an item in a list view.
+    Excludes timestamps for a cleaner response.
     """
-    name: Optional[str] = Field(None, min_length=2, max_length=100)
-    category: Optional[str] = Field(None, min_length=2, max_length=50)
-    description: Optional[str] = Field(None, max_length=500)
-    is_active: Optional[bool] = Field(None)
-    display_name_fa: Optional[str] = Field(None)
-    measurement_type: Optional[MeasurementType] = None
-    transaction_type: Optional[TransactionType] = None
-    karat_default: Optional[Decimal] = Field(None, ge=0)
-    ojrat_default: Optional[Decimal] = Field(None, ge=0)
-    profit_default: Optional[Decimal] = Field(None, ge=0)
-    tax_default: Optional[Decimal] = Field(None, ge=0)
+    id: uuid.UUID
+
+    class Config:
+        from_attributes = True
 
 class ItemPublic(ItemBase, BaseSchema):
     """
-    Schema for publicly available item information.
+    Schema for representing a single, detailed item, including timestamps.
     """
     class Config:
         from_attributes = True
 
+class ItemWithProfilesPublic(ItemPublic):
+    """
+    A detailed schema for an item that also includes its nested financial profiles.
+    """
+    financial_profiles: List[ItemFinancialProfilePublic] = []
+
+class ItemInListWithProfiles(ItemInList):
+    """A schema for the item list view that includes financial profiles but no timestamps."""
+    financial_profiles: List[ItemFinancialProfileInList] = []
+
+# --- Schema for Updating ---
+
+class ItemUpdate(BaseModel):
+    """Schema for updating an item's core identity. All fields are optional."""
+    name_fa: Optional[str] = Field(None, example="سکه امامی طرح جدید")
+    category: Optional[str] = Field(None)
+    description: Optional[str] = Field(None)
+    is_active: Optional[bool] = Field(None)
