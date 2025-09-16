@@ -1,26 +1,30 @@
-from sqlalchemy import Column, String, Boolean, Enum, BigInteger
+from sqlalchemy import Column, String, Enum, Text, Boolean
+from sqlalchemy.orm import relationship
 from app.models.base import BaseModel
-from app.models.enums.item import ItemType
+from .enums.measurement import MeasurementType
 
 class Item(BaseModel):
     """
-    Represents an item or product in the gold shop.
-    This model maps to the 'item' table.
+    Represents the core identity of an inventory asset (the "What").
+    Financial details are stored in the related ItemFinancialProfile model.
     """
     __tablename__ = "item"
 
-    name = Column(String, nullable=False, index=True)
+    name = Column(String, nullable=False, unique=True, index=True) # This will be the ItemType enum value
+    name_fa = Column(String, nullable=False, unique=True)
     category = Column(String, nullable=False, index=True)
-    description = Column(String, nullable=True)
-    type = Column(Enum(ItemType), nullable=False, default=ItemType.UNCOUNTABLE)
+    description = Column(Text, nullable=True)
+    is_active = Column(Boolean, default=True, nullable=False)
     
-    # Default values for transactions, stored as integers.
-    karat_default = Column(BigInteger, nullable=False, default=750)
-    ojrat_default = Column(BigInteger, nullable=False, default=0)
-    profit_default = Column(BigInteger, nullable=False, default=0)
-    tax_default = Column(BigInteger, nullable=False, default=0)
+    measurement_type = Column(Enum(MeasurementType, native_enum=False), nullable=False)
 
-    is_active = Column(Boolean, default=True)
+    # One-to-many relationship with financial profiles
+    financial_profiles = relationship(
+        "ItemFinancialProfile", 
+        back_populates="item", 
+        cascade="all, delete-orphan",
+        lazy="selectin" # Eagerly load profiles when an item is fetched
+    )
 
     def __repr__(self):
-        return f"<Item(id={self.id}, name='{self.name}', type='{self.type.value}')>"
+        return f"<Item(name='{self.name}')>"
