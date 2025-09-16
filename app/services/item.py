@@ -1,13 +1,13 @@
 from sqlalchemy.orm import Session
 import uuid
-from typing import List
+from typing import List, Optional
 
 from app.core.exceptions import AppException
 from fastapi import status
 from app.models.user import User
-from app.models.item import Item
+from app.models.item import Item, MeasurementType
 from app.repository.item import item_repo
-from app.schema.item import ItemUpdate
+from app.schema.item import ItemUpdate, ItemInListWithProfiles
 from app.logging_config import audit_logger
 
 class ItemService:
@@ -35,5 +35,27 @@ class ItemService:
         updated_item = item_repo.update(db, db_obj=item_to_update, obj_in=item_in)
         audit_logger.info(f"Item '{updated_item.name}' updated by user '{current_user.username}'.")
         return updated_item
+    
+    def search(
+        self,
+        db: Session,
+        *,
+        name_fa: Optional[str] = None,
+        category: Optional[str] = None,
+        measurement_type: Optional[MeasurementType] = None,
+        is_active: Optional[bool] = None,
+        skip: int = 0,
+        limit: int = 100
+    ) -> List[ItemInListWithProfiles]:
+        """Searches for items using the repository."""
+        return item_repo.search(
+            db,
+            name_fa=name_fa,
+            category=category,
+            measurement_type=measurement_type,
+            is_active=is_active,
+            skip=skip,
+            limit=limit
+        )
 
 item_service = ItemService()

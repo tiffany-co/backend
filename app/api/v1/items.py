@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, status, Query
 from sqlalchemy.orm import Session
 import uuid
-from typing import List
+from typing import List, Optional
 
 from app.api import deps
 from app.models.user import User, UserRole
+from app.models.enums.measurement import MeasurementType
 from app.schema.item import ItemUpdate, ItemInList, ItemInListWithProfiles, ItemWithProfilesPublic
 from app.schema.error import ErrorDetail
 from app.services.item import item_service
@@ -45,6 +46,36 @@ def read_all_items_with_profiles(
 ):
     return item_service.get_all(db, limit=1000)
 
+@router.get(
+    "/search",
+    response_model=List[ItemInListWithProfiles],
+    summary="Search for items",
+    description="Allows an authenticated user to search for items using various criteria.",
+    responses={
+        200: {"description": "A list of items matching the search criteria."},
+        401: {"description": "Unauthorized.", "model": ErrorDetail},
+    }
+)
+def search_contacts(
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+    name_fa: Optional[str] = Query(None, description="Search by persian name (case-insensitive, partial match)."),
+    category: Optional[str] = Query(None, description="Search by category (case-insensitive, partial match)."),
+    measurement_type: Optional[MeasurementType] = Query(None, description="Filter by measurement type [COUNTABLE/UNCOUNTABLE]."),
+    is_active: Optional[bool] = Query(None, description="Filter by is activation [True/False]."),
+    skip: int = Query(0, ge=0, description="Number of records to skip."),
+    limit: int = Query(100, ge=1, le=200, description="Number of records to return."),
+):
+    """Endpoint for searching and filtering contacts."""
+    return item_service.search(
+        db,
+        name_fa=name_fa,
+        category=category,
+        measurement_type=measurement_type,
+        is_active=is_active,
+        skip=skip,
+        limit=limit
+    )
 
 @router.get(
     "/{item_id}",
