@@ -1,145 +1,122 @@
 
-# Gold Shop API - Backend Service
+# Gold Shop - Backend API
 
-This is the backend service for the Gold Shop Management application, built with FastAPI. It provides a robust, documented, and secure RESTful API for all application data and business logic.
+This directory contains the backend API for the Gold Shop Management System. It is a modern, high-performance API built with Python and FastAPI.
 
-## ✨ Features
+## Features
 
--   Modern, asynchronous framework using **FastAPI**.
+-   **Modern Framework:** Built with [FastAPI](https://fastapi.tiangolo.com/) for high performance and automatic interactive documentation.
     
--   **SQLAlchemy ORM** for database interaction.
+-   **Clean Architecture:** Follows a clean, service-oriented architecture with a clear separation of concerns (API, Services, Repositories, Models).
     
--   **Pydantic** for robust data validation and serialization.
+-   **Database:** Uses [PostgreSQL](https://www.postgresql.org/) with [SQLAlchemy](https://www.sqlalchemy.org/) as the ORM.
     
--   **Alembic** for safe and version-controlled database migrations.
+-   **Migrations:** Database schema changes are managed with [Alembic](https://alembic.sqlalchemy.org/).
     
--   **Poetry** for deterministic dependency management.
+-   **Authentication:** Secure JWT-based authentication with password hashing.
     
--   **JWT-based authentication** with a role and permission system.
-    
--   Fully containerized for production with **Docker**.
+-   **Dependency Management:** Project dependencies are managed with [Poetry](https://python-poetry.org/).
     
 
-## 🛠️ Local Development Setup
+## Local Development Setup
 
-Follow these steps to run the backend service on your local machine for development.
+These instructions assume you are running the database and Redis services from the root `CaptainDock` directory using `make up-dev`.
 
-### Prerequisites
-
--   Python 3.11+
+1.  **Prerequisites:**
     
--   [Poetry](https://www.google.com/search?q=https://python-poetry.org/docs/%23installation "null") for package management.
+    -   Python 3.11+
+        
+    -   [Poetry](https://www.google.com/search?q=https://python-poetry.org/docs/%23installation)
+        
+2.  **Navigate to the Backend Directory:** All commands should be run from within this `backend` directory.
     
--   [Docker](https://www.docker.com/products/docker-desktop/ "null") and Docker Compose for running services.
+    ```
+    cd backend
+    
+    ```
+    
+3.  **Install Dependencies:** Poetry will create a virtual environment and install all the required packages from the `pyproject.toml` file.
+    
+    ```
+    poetry install
+    
+    ```
+    
+4.  **Run the Server:** This command starts the Uvicorn server with hot-reloading enabled, which is ideal for development.
+    
+    ```
+    poetry run uvicorn app.main:app --reload
+    
+    ```
+    
+    The API will now be running.
+    
+    -   **API URL:**  `http://localhost:8000`
+        
+    -   **Interactive Docs (Swagger UI):**  `http://localhost:8000/docs`
+        
+
+## Project Structure
+
+The application code is located in the `app/` directory and follows a logical structure:
+
+-   `app/api/`: Contains the API endpoints (routers). Logic is further split into `v1/` for versioning.
+    
+-   `app/core/`: Core application settings, security utilities, and exception handling.
+    
+-   `app/db/`: Database session management and the base model configuration.
+    
+-   `app/models/`: SQLAlchemy database models, defining the table structures.
+    
+-   `app/repository/`: The repository layer, responsible for all direct database communication.
+    
+-   `app/schema/`: Pydantic schemas, used for data validation and serialization (API request/response shapes).
+    
+-   `app/services/`: The service layer, containing all business logic.
+    
+-   `seeding/`: Contains logic and data for seeding the database with required initial data on startup.
+    
+-   `scripts/`: Contains standalone utility scripts for administrative tasks (e.g., creating an admin, seeding demo data).
     
 
-### 1. Install Dependencies
+## Database Migrations (Alembic)
 
-Navigate to the `backend` directory and use Poetry to install all the required Python packages.
-
-```
-cd backend
-poetry install
-
-```
-
-### 2. Start Dependent Services
-
-The backend requires a PostgreSQL database and a Redis instance to run. The development Docker Compose setup handles this for you. From the **root `CaptainDock` directory**, run:
-
-```
-make up-dev
-
-```
-
-This will start the database and Redis containers in the background.
-
-### 3. Run the FastAPI Server
-
-Once the database container is running, you can start the FastAPI application. **In a new terminal**, navigate to the `backend` directory and run:
-
-```
-poetry run uvicorn app.main:app --reload
-
-```
-
-Your API will now be running at `http://localhost:8000` and will automatically restart whenever you make a code change. The interactive API documentation (Swagger UI) is available at `http://localhost:8000/docs`.
-
-## 🗄️ Database Migrations (Alembic)
-
-This project uses Alembic to manage database schema changes. It's like version control for your database.
+Alembic is used to manage all changes to the database schema. **All migration commands should be run from the `CaptainDock` root directory using `make`**.
 
 ### The Workflow
 
-Never manually alter the database schema. Always follow this process:
+When you need to make a change to a database table:
 
-1.  **Change a Model:** Make a change to a model file in `app/models/`. For example, add a new column to the `Contact` model.
+1.  **Edit the Model:** Modify the corresponding model file in `app/models/`. For example, add a new column to `app/models/user.py`.
     
-2.  **Generate a Migration Script:** From the **root `CaptainDock` directory**, run:
+2.  **Generate a Migration Script:** Run the `db-migrate` command. Alembic will compare your models to the database and automatically generate a new script in the `alembic/versions/` folder.
     
     ```
     make db-migrate
     
     ```
     
-    Alembic will compare your models to the database and generate a new script in `alembic/versions/`.
-    
-3.  **Apply the Migration:** To apply the new changes to your development database, run:
+3.  **Apply the Migration:** Run the `db-upgrade` command to apply the new script to your development database.
     
     ```
     make db-upgrade
     
     ```
     
-4.  **Commit:** Commit both your model changes and the newly generated migration script to Git.
-    
-
-### Reverting a Migration (Development Only)
-
-If you need to undo the last migration in your local development environment, you can run:
-
-```
-make db-downgrade
-
-```
-
-## ⚙️ Utilities
-
-The `Makefile` in the root directory provides several useful commands for managing your local development database.
-
--   **Create an Admin User:**
+4.  **Revert a Migration (if needed):** To undo the last migration, you can run:
     
     ```
-    make create-admin
-    
-    ```
-    
--   **Truncate the Database (DANGEROUS):** This will delete all data and reset the database to a clean slate.
-    
-    ```
-    make truncate-db
+    make db-downgrade
     
     ```
     
 
-## 📁 Project Structure
+## Local Utilities
 
-The backend code is organized into a clean, modular structure:
+The following `make` commands (run from the `CaptainDock` root) are available to manage your local development database:
 
--   `app/api/`: Contains the API endpoints (routers).
+-   `make create-admin`: Runs an interactive script to create a new admin user.
     
--   `app/core/`: Core application settings, security, and exception handling.
+-   `make seed-db`: Populates the database with realistic sample data for demo purposes.
     
--   `app/db/`: Database session management and base model classes.
-    
--   `app/models/`: SQLAlchemy ORM models that define database tables.
-    
--   `app/repository/`: The data access layer that handles all database queries.
-    
--   `app/schema/`: Pydantic schemas for data validation and serialization.
-    
--   `app/services/`: The business logic layer where all operations are orchestrated.
-    
--   `scripts/`: Standalone scripts for administrative tasks.
-    
--   `alembic/`: Contains the database migration scripts.
+-   `make truncate-db`: **DANGEROUS!** Deletes all data from all tables and recreates the schema.
