@@ -15,3 +15,5 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 # single source of truth and avoid circular import issues.
 Base = declarative_base()
 
+# This import is placed here to ensure it's loaded when the session is configured.
+from app.core import auditing

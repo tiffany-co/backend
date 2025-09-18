@@ -1,4 +1,3 @@
-import os
 import sys
 from logging.config import fileConfig
 from pathlib import Path
@@ -9,8 +8,8 @@ root_dir = Path(__file__).resolve().parents[1]
 sys.path.append(str(root_dir))
 # ---
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from sqlalchemy import engine_from_config, pool
+import sqlalchemy as sa
 
 from alembic import context
 
@@ -63,6 +62,9 @@ def run_migrations_online() -> None:
         )
 
         with context.begin_transaction():
+            sql_script_path = Path(__file__).parent / "sql" / "cap_audit_log.sql"
+            if sql_script_path.is_file():
+                connection.execute(sa.text(sql_script_path.read_text()))
             context.run_migrations()
 
 
