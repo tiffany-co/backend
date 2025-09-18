@@ -3,10 +3,10 @@ from enum import Enum
 class ItemType(str, Enum):
     """
     Enum for the specific types of items that correspond to columns in the Inventory table.
-    This acts as a single source of truth for all inventory assets.
+    This acts as the single source of truth for all inventory assets.
     """
     # Uncountable (Weights)
-    NEW_GOLD = "new_goldy"
+    NEW_GOLD = "new_gold"
     USED_GOLD = "used_gold"
     PERSIAN_COIN = "persian_coin"
     MOLTEN_GOLD = "molten_gold"
@@ -17,8 +17,11 @@ class ItemType(str, Enum):
     HALF_COIN_86 = "half_coin_86"
     QUARTER_COIN_86 = "quarter_coin_86"
     EMAMI_COIN_ETC = "emami_coin_etc"
-    HALF_COIN_ETC = "quarter_coin_etc"
+    HALF_COIN_ETC = "half_coin_etc"
     QUARTER_COIN_ETC = "quarter_coin_etc"
+    
+    # Currencies (Decimal)
     DOLLAR = "dollar"
     EURO = "euro"
-    POUND = "pond"
+    POUND = "pound"
+

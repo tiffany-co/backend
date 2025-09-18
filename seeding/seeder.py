@@ -11,6 +11,7 @@ from app.repository.item import item_repo
 from app.repository.permission import permission_repo
 from app.repository.item_financial_profile import item_financial_profile_repo
 from app.logging_config import logger
+from app.db.session import SessionLocal
 from seeding.data.item_data import PREDEFINED_ITEMS_WITH_PROFILES
 from seeding.data.permission_data import PREDEFINED_PERMISSIONS
 
@@ -68,10 +69,14 @@ def seed_permissions(db: Session):
     else:
         logger.info(f"All predefined permissions already exist.")
 
-def seed_all(db: Session):
+def seed_all():
     """
     Master seeder function to run all individual seeders.
     """
-    seed_permissions(db)
-    seed_items(db)
-
+    try:
+        db = SessionLocal()
+        seed_permissions(db)
+        seed_items(db)
+    finally:
+        db.close()
+        logger.info("Database connection closed successfully.")
