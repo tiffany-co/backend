@@ -4,12 +4,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.router import api_router
 from app.core import exceptions
-from app.logging_config import setup_logging
-from app.db.session import SessionLocal
+from app.logging_config import setup_logging, logger
 from app.services.permission import permission_service
 from seeding.seeder import seed_all
 from app.core.config import settings
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -20,15 +18,10 @@ async def lifespan(app: FastAPI):
     print("--- Application Startup ---")
     setup_logging()
     
-    # Seed permissions into the database
-    db = SessionLocal()
-    try:
-        seed_all(db)
-    finally:
-        db.close()
-        
+    seed_all()
     yield
-    print("--- Application Shutdown ---")
+    
+    logger.info("--- Application Shutdown ---")
 
 # Initialize the FastAPI application with the lifespan event handler and metadata
 app = FastAPI(

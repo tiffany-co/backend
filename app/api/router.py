@@ -8,7 +8,7 @@ from app.api.v1 import (
     permissions,
     items,
     item_financial_profiles,
-    # inventory, # Inventory is disabled for now
+    inventory,
     users_me,
     users_admin
 )
@@ -44,3 +44,4 @@ api_router.include_router(
     prefix="/financial-profiles", 
     tags=["Item Financial Profiles"]
 )
+api_router.include_router(inventory.router, prefix="/inventory", tags=["inventory"])
