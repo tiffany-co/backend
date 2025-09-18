@@ -13,4 +13,4 @@ from app.models.permission import Permission
 from app.models.saved_bank_account import SavedBankAccount
 from app.models.item import Item
 from app.models.item_financial_profile import ItemFinancialProfile
-# TODO adding inventory
+from app.models.inventory import Inventory
