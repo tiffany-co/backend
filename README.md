@@ -120,3 +120,4 @@ The following `make` commands (run from the `CaptainDock` root) are available to
 -   `make seed-db`: Populates the database with realistic sample data for demo purposes.
     
 -   `make truncate-db`: **DANGEROUS!** Deletes all data from all tables and recreates the schema.
+-   `make truncate-audit-log`: Delete all audit logs from its table.

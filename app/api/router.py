@@ -10,7 +10,8 @@ from app.api.v1 import (
     item_financial_profiles,
     inventory,
     users_me,
-    users_admin
+    users_admin,
+    audit_logs
 )
 # --- Main API Router ---
 # This router includes all the version 1 routers.
@@ -45,3 +46,4 @@ api_router.include_router(
     tags=["Item Financial Profiles"]
 )
 api_router.include_router(inventory.router, prefix="/inventory", tags=["inventory"])
+api_router.include_router(audit_logs.router, prefix="/audit-logs", tags=["Audit Logs"])

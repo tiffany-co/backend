@@ -14,3 +14,4 @@ from app.models.saved_bank_account import SavedBankAccount
 from app.models.item import Item
 from app.models.item_financial_profile import ItemFinancialProfile
 from app.models.inventory import Inventory
+from app.models.audit_log import AuditLog
