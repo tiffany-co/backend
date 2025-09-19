@@ -8,7 +8,7 @@ from app.models.user import User, UserRole
 from app.models.enums.audit_log import OperationType
 from app.schema.audit_log import AuditLogPublic
 from app.schema.error import ErrorDetail
-from app.repository.audit_log import audit_log_repo
+from app.services.audit_log import audit_log_service
 
 router = APIRouter()
 
@@ -35,7 +35,7 @@ def search_audit_logs(
     """
     Admin-only endpoint to search and paginate through the audit log.
     """
-    logs = audit_log_repo.search(
+    logs = audit_log_service.search_logs(
         db, 
         user_id=user_id, 
         operation=operation, 
@@ -44,4 +44,3 @@ def search_audit_logs(
         limit=limit
     )
     return logs
-

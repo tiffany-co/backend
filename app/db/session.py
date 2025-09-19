@@ -14,6 +14,3 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 # All ORM models will inherit from this class. It's defined here to be the
 # single source of truth and avoid circular import issues.
 Base = declarative_base()
-
-# This import is placed here to ensure it's loaded when the session is configured.
-from app.core import auditing

@@ -7,4 +7,3 @@ class OperationType(str, Enum):
     CREATE = "CREATE"
     UPDATE = "UPDATE"
     DELETE = "DELETE"
-

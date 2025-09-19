@@ -1,9 +1,10 @@
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List, Optional, Any
 import uuid
 
 from app.repository.base import BaseRepository
-from app.models.audit_log import AuditLog, OperationType
+from app.models.audit_log import AuditLog
+from app.models.enums.audit_log import OperationType
 
 class AuditLogRepository(BaseRepository[AuditLog, Any, Any]):
     """

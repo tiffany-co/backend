@@ -19,5 +19,4 @@ class AuditLog(BaseModel):
     before_state = Column(JSONB, nullable=True, comment="The state of the record before the change (for UPDATE and DELETE).")
     after_state = Column(JSONB, nullable=True, comment="The state of the record after the change (for CREATE and UPDATE).")
 
-    user = relationship("User")
-
+    user = relationship("User", lazy="selectin")

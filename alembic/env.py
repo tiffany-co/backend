@@ -62,10 +62,25 @@ def run_migrations_online() -> None:
         )
 
         with context.begin_transaction():
+            context.run_migrations()
+
             sql_script_path = Path(__file__).parent / "sql" / "cap_audit_log.sql"
             if sql_script_path.is_file():
-                connection.execute(sa.text(sql_script_path.read_text()))
-            context.run_migrations()
+                # Only execute if the table exists
+                result = connection.execute(
+                    sa.text("""
+                        SELECT EXISTS (
+                            SELECT 1 
+                            FROM information_schema.tables 
+                            WHERE table_name = 'audit_log'
+                        );
+                    """)
+                )
+                table_exists = result.scalar()
+                if table_exists:
+                    sql = sql_script_path.read_text()
+                    connection.execute(sa.text(sql))
+
 
 
 if context.is_offline_mode():

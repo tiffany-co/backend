@@ -7,7 +7,6 @@ from pydantic import ValidationError
 
 from app.db.session import SessionLocal
 from app.core.config import settings
-from app.core.auditing import current_user_var
 from app.schema.token import TokenPayload
 from app.models.user import User, UserRole
 from app.models.permission import PermissionName
@@ -53,7 +52,10 @@ def get_current_user(
     user = user_repo.get(db, id=token_data.sub)
     if not user:
         raise credentials_exception
-    current_user_var.set(user)
+    
+    # Add the current user's ID to the session info dictionary
+    # This makes it available to the SQLAlchemy event listeners for auditing.
+    db.info['current_user_id'] = user.id
     return user
 
 def get_current_active_user(

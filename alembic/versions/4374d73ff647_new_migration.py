@@ -1,16 +1,16 @@
 """New migration
 
-Revision ID: e9c5ed9dcba1
+Revision ID: 4374d73ff647
 Revises: 
-Create Date: 2025-09-17 14:48:45.789933
+Create Date: 2025-09-19 17:58:08.973110
 
 """
 from alembic import op
 import sqlalchemy as sa
-
+from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = 'e9c5ed9dcba1'
+revision = '4374d73ff647'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -91,6 +91,21 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_user_phone_number'), 'user', ['phone_number'], unique=True)
     op.create_index(op.f('ix_user_username'), 'user', ['username'], unique=True)
+    op.create_table('audit_log',
+    sa.Column('user_id', sa.UUID(), nullable=True, comment='The user who performed the action. Can be null for system actions.'),
+    sa.Column('operation', sa.Enum('CREATE', 'UPDATE', 'DELETE', name='operationtype', native_enum=False), nullable=False),
+    sa.Column('table_name', sa.String(), nullable=False),
+    sa.Column('before_state', postgresql.JSONB(astext_type=sa.Text()), nullable=True, comment='The state of the record before the change (for UPDATE and DELETE).'),
+    sa.Column('after_state', postgresql.JSONB(astext_type=sa.Text()), nullable=True, comment='The state of the record after the change (for CREATE and UPDATE).'),
+    sa.Column('id', sa.UUID(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=True),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index(op.f('ix_audit_log_operation'), 'audit_log', ['operation'], unique=False)
+    op.create_index(op.f('ix_audit_log_table_name'), 'audit_log', ['table_name'], unique=False)
+    op.create_index(op.f('ix_audit_log_user_id'), 'audit_log', ['user_id'], unique=False)
     op.create_table('contact',
     sa.Column('first_name', sa.String(), nullable=True),
     sa.Column('last_name', sa.String(), nullable=False),
@@ -142,6 +157,10 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_contact_last_name'), table_name='contact')
     op.drop_index(op.f('ix_contact_first_name'), table_name='contact')
     op.drop_table('contact')
+    op.drop_index(op.f('ix_audit_log_user_id'), table_name='audit_log')
+    op.drop_index(op.f('ix_audit_log_table_name'), table_name='audit_log')
+    op.drop_index(op.f('ix_audit_log_operation'), table_name='audit_log')
+    op.drop_table('audit_log')
     op.drop_index(op.f('ix_user_username'), table_name='user')
     op.drop_index(op.f('ix_user_phone_number'), table_name='user')
     op.drop_table('user')
