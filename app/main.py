@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.router import api_router
 from app.core import exceptions
+from app.core import audit_listener
 from app.logging_config import setup_logging, logger
 from app.services.permission import permission_service
 from seeding.seeder import seed_all
@@ -17,6 +18,10 @@ async def lifespan(app: FastAPI):
     # On startup
     print("--- Application Startup ---")
     setup_logging()
+    
+    # The listener is registered via the import, but this is a good place
+    # to explicitly state that auditing is being initialized.
+    logger.info("SQLAlchemy audit listener initialized.")
     
     seed_all()
     yield

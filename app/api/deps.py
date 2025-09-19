@@ -52,6 +52,10 @@ def get_current_user(
     user = user_repo.get(db, id=token_data.sub)
     if not user:
         raise credentials_exception
+    
+    # Add the current user's ID to the session info dictionary
+    # This makes it available to the SQLAlchemy event listeners for auditing.
+    db.info['current_user_id'] = user.id
     return user
 
 def get_current_active_user(
