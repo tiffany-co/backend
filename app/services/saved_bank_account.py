@@ -8,7 +8,6 @@ from app.models.user import User
 from app.models.saved_bank_account import SavedBankAccount
 from app.repository.saved_bank_account import saved_bank_account_repo
 from app.schema.saved_bank_account import SavedBankAccountCreate, SavedBankAccountUpdate
-from app.logging_config import audit_logger
 
 class SavedBankAccountService:
     """
@@ -28,7 +27,7 @@ class SavedBankAccountService:
         """Get all saved bank accounts."""
         return saved_bank_account_repo.get_multi(db, skip=skip, limit=limit)
     
-    def create(self, db: Session, *, account_in: SavedBankAccountCreate, current_user: User) -> SavedBankAccount:
+    def create(self, db: Session, *, account_in: SavedBankAccountCreate) -> SavedBankAccount:
         """Create a new saved bank account with validation."""
         if saved_bank_account_repo.get_by_name(db, name=account_in.name):
             raise AppException(
@@ -42,10 +41,9 @@ class SavedBankAccountService:
             )
         
         new_account = saved_bank_account_repo.create(db, obj_in=account_in)
-        audit_logger.info(f"Bank Account '{new_account.name}' created by user '{current_user.username}'.")
         return new_account
 
-    def update(self, db: Session, *, account_id: uuid.UUID, account_in: SavedBankAccountUpdate, current_user: User) -> SavedBankAccount:
+    def update(self, db: Session, *, account_id: uuid.UUID, account_in: SavedBankAccountUpdate) -> SavedBankAccount:
         """Update a saved bank account with validation."""
         account_to_update = self.get_by_id(db, account_id=account_id)
         
@@ -65,14 +63,12 @@ class SavedBankAccountService:
                 )
 
         updated_account = saved_bank_account_repo.update(db, db_obj=account_to_update, obj_in=account_in)
-        audit_logger.info(f"Bank Account '{updated_account.name}' updated by user '{current_user.username}'.")
         return updated_account
 
-    def delete(self, db: Session, *, account_id: uuid.UUID, current_user: User) -> SavedBankAccount:
+    def delete(self, db: Session, *, account_id: uuid.UUID) -> SavedBankAccount:
         """Delete a saved bank account."""
-        account_to_delete = self.get_by_id(db, account_id=account_id)
+        self.get_by_id(db, account_id=account_id)
         deleted_account = saved_bank_account_repo.remove(db, id=account_id)
-        audit_logger.info(f"Bank Account '{account_to_delete.name}' deleted by user '{current_user.username}'.")
         return deleted_account
 
 saved_bank_account_service = SavedBankAccountService()

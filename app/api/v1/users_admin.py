@@ -253,10 +253,9 @@ def add_permission_to_user(
     current_user: User = Depends(deps.get_current_active_user),
 ):
     user = permission_service.add_permission_to_user(
-        db=db, 
-        user_id=user_id, 
-        permission_name=permission_in.permission_name, 
-        current_user=current_user
+        db=db,
+        user_id=user_id,
+        permission_name=permission_in.permission_name
     )
     return user
 
@@ -282,7 +281,6 @@ def remove_permission_from_user(
     permission_service.remove_permission_from_user(
         db=db,
         user_id=user_id,
-        permission_name=permission_name,
-        current_user=current_user
+        permission_name=permission_name
     )
     return Response(status_code=status.HTTP_204_NO_CONTENT)

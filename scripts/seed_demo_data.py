@@ -64,8 +64,7 @@ def seed_demo_data():
             if account:
                 console.print(f"Bank Account '[cyan]{account_in.name}[/cyan]' already exists. Skipping.", style="dim")
             else:
-                # The create service requires a 'current_user' for the audit log
-                saved_bank_account_service.create(db, account_in=account_in, current_user=admin_user)
+                saved_bank_account_service.create(db, account_in=account_in)
                 console.print(f"Created bank account: '[bold green]{account_in.name}[/bold green]'", style="green")
 
 
