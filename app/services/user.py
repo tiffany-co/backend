@@ -9,7 +9,6 @@ from app.models.enums.user import UserRole
 from app.repository.user import user_repo
 from app.schema.user import UserCreate, UserUpdate, AdminCreate
 from app.core.security import get_password_hash
-from app.logging_config import audit_logger
 
 class UserService:
     """
@@ -64,7 +63,6 @@ class UserService:
             user_data_for_db["role"] = UserRole.USER
         
         db_user = user_repo.create(db, obj_in=user_data_for_db)
-        audit_logger.info(f"User '{db_user.username}' (ID: {db_user.id}) created.")
         return db_user
 
     def update_user(
@@ -107,7 +105,6 @@ class UserService:
             del update_data["password"]
 
         updated_user = user_repo.update(db, db_obj=user_to_update, obj_in=update_data)
-        audit_logger.info(f"User '{updated_user.username}' (ID: {updated_user.id}) updated by User '{current_user.username}'.")
         return updated_user
 
     def delete_user(self, db: Session, *, user_id: uuid.UUID, current_user: User) -> User:
@@ -129,7 +126,6 @@ class UserService:
             )
 
         deleted_user = user_repo.remove(db, id=user_id)
-        audit_logger.info(f"User '{deleted_user.username}' (ID: {deleted_user.id}) deleted by User '{current_user.username}'.")
         return deleted_user
 
 user_service = UserService()

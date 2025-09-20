@@ -3,9 +3,9 @@ from logging.config import dictConfig
 
 def setup_logging():
     """
-    Configures the logging for the application with two distinct loggers:
-    1. audit: For tracking user actions and important business events.
-    2. app: For general application logs, debugging, and errors.
+    Configures the logging for the application.
+    - A colorful, formatted log for the console (Uvicorn's default).
+    - A plain, uncolored, formatted log for the app.log file.
     """
     log_config = {
         "version": 1,
@@ -16,8 +16,8 @@ def setup_logging():
                 "fmt": "%(levelprefix)s %(asctime)s - %(name)s - %(message)s",
                 "datefmt": "%Y-%m-%d %H:%M:%S",
             },
-            "audit": {
-                "format": "%(asctime)s - AUDIT - %(message)s",
+            "plain": {
+                "format": "%(levelname)s: %(asctime)s - %(name)s - %(message)s",
                 "datefmt": "%Y-%m-%d %H:%M:%S",
             },
         },
@@ -27,15 +27,8 @@ def setup_logging():
                 "class": "logging.StreamHandler",
                 "stream": "ext://sys.stderr",
             },
-            "audit_file": {
-                "formatter": "audit",
-                "class": "logging.handlers.RotatingFileHandler",
-                "filename": "audit.log",
-                "maxBytes": 1024 * 1024 * 5,  # 5 MB
-                "backupCount": 10,
-            },
             "app_file": {
-                "formatter": "default",
+                "formatter": "plain", # Use the new plain formatter
                 "class": "logging.handlers.RotatingFileHandler",
                 "filename": "app.log",
                 "maxBytes": 1024 * 1024 * 5, # 5 MB
@@ -47,16 +40,9 @@ def setup_logging():
                 "handlers": ["default", "app_file"],
                 "level": "INFO",
             },
-            "audit": {
-                "handlers": ["audit_file"],
-                "level": "INFO",
-                "propagate": False, # Prevent audit logs from going to the root logger
-            },
         },
     }
     dictConfig(log_config)
 
-# Get the configured loggers to be imported by other modules
+# Get the configured logger to be imported by other modules
 logger = logging.getLogger("app")
-audit_logger = logging.getLogger("audit")
-

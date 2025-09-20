@@ -114,5 +114,5 @@ def update_item(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.require_role([UserRole.ADMIN])),
 ):
-    return item_service.update(db=db, item_id=item_id, item_in=item_in, current_user=current_user)
+    return item_service.update(db=db, item_id=item_id, item_in=item_in)
 

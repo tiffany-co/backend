@@ -7,8 +7,6 @@ from app.models.inventory import Inventory
 from app.models.enums.item_type import ItemType
 from app.repository.inventory import inventory_repo
 from app.schema.inventory import InventoryAdjust
-from app.logging_config import audit_logger
-
 
 # --- Helpers ---
 def _extract_model_attrs(model: Any, exclude: List[str] = None) -> Dict[str, Any]:
@@ -62,7 +60,7 @@ class InventoryService:
         """Retrieve and format the latest inventory snapshot."""
         return _format_inventory(inventory_repo.get_latest(db))
 
-    def adjust_inventory(self, db: Session, *, adjustment_in: InventoryAdjust, current_user: User) -> Dict[str, Any]:
+    def adjust_inventory(self, db: Session, *, adjustment_in: InventoryAdjust) -> Dict[str, Any]:
         """Create a new inventory snapshot based on manual adjustments."""
         latest_inventory = inventory_repo.get_latest(db)
 
@@ -84,10 +82,6 @@ class InventoryService:
         # Persist new snapshot
         new_record = inventory_repo.create(db, obj_in=new_snapshot_data)
 
-        audit_logger.info(
-            f"Manual inventory adjustment by '{current_user.username}'. "
-            f"Description: {adjustment_in.description}"
-        )
         return _format_inventory(new_record)
 
 

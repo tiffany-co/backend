@@ -31,5 +31,5 @@ def update_item_financial_profile(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.require_role([UserRole.ADMIN])),
 ):
-    updated_profile = item_financial_profile_service.update(db=db, profile_id=profile_id, profile_in=profile_in, current_user=current_user)
+    updated_profile = item_financial_profile_service.update(db=db, profile_id=profile_id, profile_in=profile_in)
     return updated_profile.item

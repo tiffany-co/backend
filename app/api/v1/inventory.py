@@ -106,7 +106,5 @@ def adjust_inventory(
     Allows an administrator to make a manual adjustment to the inventory.
     This creates a new snapshot with the updated values and returns the new record.
     """
-    return inventory_service.adjust_inventory(
-        db=db, adjustment_in=adjustment_in, current_user=current_user
-    )
+    return inventory_service.adjust_inventory(db=db, adjustment_in=adjustment_in)
 

@@ -10,7 +10,6 @@ from app.models.enums.permission import PermissionName
 from app.models.enums.contact import ContactType
 from app.repository.contact import contact_repo
 from app.schema.contact import ContactCreate, ContactUpdate
-from app.logging_config import audit_logger
 
 class ContactService:
     """
@@ -50,7 +49,6 @@ class ContactService:
         contact_data['creator_user_id'] = current_user.id
         
         new_contact = contact_repo.create(db, obj_in=contact_data)
-        audit_logger.info(f"Contact '{new_contact.first_name} {new_contact.last_name}' created by user '{current_user.username}'.")
         return new_contact
     
     def update_contact(self, db: Session, *, contact_id: uuid.UUID, contact_in: ContactUpdate, current_user: User) -> Contact:
@@ -85,16 +83,12 @@ class ContactService:
                 )
 
         updated_contact = contact_repo.update(db, db_obj=contact_to_update, obj_in=contact_in)
-        audit_logger.info(f"Contact '{updated_contact.first_name} {updated_contact.last_name}' updated by user '{current_user.username}'.")
         return updated_contact
     
-    def delete_contact(self, db: Session, *, contact_id: uuid.UUID, current_user: User) -> Contact:
+    def delete_contact(self, db: Session, *, contact_id: uuid.UUID) -> Contact:
         """Handles the business logic for deleting a contact."""
-        contact_to_delete = self.get_contact_by_id(db, contact_id=contact_id)
-        
+        self.get_contact_by_id(db, contact_id=contact_id)
         deleted_contact = contact_repo.remove(db, id=contact_id)
-        
-        audit_logger.info(f"Contact '{contact_to_delete.first_name} {contact_to_delete.last_name}' (ID: {contact_id}) deleted by user '{current_user.username}'.")
         return deleted_contact
 
     def search_contacts(

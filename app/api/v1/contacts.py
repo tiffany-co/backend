@@ -157,5 +157,5 @@ def delete_contact(
     current_user: User = Depends(deps.require_role([UserRole.ADMIN])),
 ):
     """Admin-only endpoint to delete a contact."""
-    contact_service.delete_contact(db, contact_id=contact_id, current_user=current_user)
+    contact_service.delete_contact(db, contact_id=contact_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
