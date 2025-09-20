@@ -1,5 +1,5 @@
-from sqlalchemy import Column, BigInteger, Text, Numeric
-# from sqlalchemy import ForeignKey # Keep this commented for now
+from sqlalchemy import Column, BigInteger, Text, Numeric, ForeignKey
+from sqlalchemy.orm import relationship
 from app.models.base import BaseModel
 
 class Inventory(BaseModel):
@@ -10,7 +10,7 @@ class Inventory(BaseModel):
     """
     __tablename__ = "inventory"
 
-    # transaction_id = Column(ForeignKey("transaction.id"), nullable=True)
+    transaction_id = Column(ForeignKey("transaction.id"), nullable=True)
     description = Column(Text, nullable=True, comment="Note for manual adjustments, or link to a transaction.")
 
     # --- Balances ---
@@ -37,3 +37,5 @@ class Inventory(BaseModel):
     half_coin_etc = Column(BigInteger, nullable=False, default=0)
     quarter_coin_etc = Column(BigInteger, nullable=False, default=0)
 
+    # Relationship
+    transaction = relationship("Transaction", back_populates="inventory_entry")
