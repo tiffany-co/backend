@@ -15,3 +15,5 @@ from app.models.item import Item
 from app.models.item_financial_profile import ItemFinancialProfile
 from app.models.inventory import Inventory
 from app.models.audit_log import AuditLog
+from app.models.transaction import Transaction
+from app.models.transaction_item import TransactionItem
