@@ -11,7 +11,7 @@ class TransactionItem(BaseModel):
     """
     __tablename__ = "transaction_item"
 
-    transaction_id = Column(UUID(as_uuid=True), ForeignKey("transaction.id"), nullable=False, index=True)
+    transaction_id = Column(UUID(as_uuid=True), ForeignKey("transaction.id", ondelete="CASCADE"), nullable=False, index=True)
     item_id = Column(UUID(as_uuid=True), ForeignKey("item.id"), nullable=False, index=True)
     
     transaction_type = Column(Enum(TransactionType, native_enum=False), nullable=False)
