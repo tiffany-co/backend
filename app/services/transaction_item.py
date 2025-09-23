@@ -10,13 +10,17 @@ from app.models.enums.transaction import TransactionStatus
 from app.repository.transaction_item import transaction_item_repo
 from app.schema.transaction_item import TransactionItemCreate, TransactionItemUpdate
 from app.services.transaction import transaction_service
+from app.services.item import item_service # Import item service for validation
 
 class TransactionItemService:
 
     def get_item_by_id(self, db: Session, *, item_id: uuid.UUID, current_user: User) -> TransactionItem:
         item = transaction_item_repo.get(db, id=item_id)
         if not item:
-            raise AppException(status.HTTP_404_NOT_FOUND, "Transaction item not found.")
+            raise AppException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Transaction item not found."
+            )
         
         # Piggyback on transaction service to check permissions
         transaction_service.get_transaction_by_id(db, transaction_id=item.transaction_id, current_user=current_user)
@@ -25,7 +29,13 @@ class TransactionItemService:
     def create_item(self, db: Session, *, item_in: TransactionItemCreate, current_user: User) -> TransactionItem:
         transaction = transaction_service.get_transaction_by_id(db, transaction_id=item_in.transaction_id, current_user=current_user, with_items=True)
         if transaction.status != TransactionStatus.DRAFT:
-            raise AppException(status.HTTP_400_BAD_REQUEST, "Items can only be added to transactions in 'draft' status.")
+            raise AppException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Items can only be added to transactions in 'draft' status."
+            )
+        
+        # Validate that the item template exists
+        item_service.get_by_id(db, item_id=item_in.item_id)
         
         create_data = item_in.model_dump()
         create_data["total_price"] = self._calculate_item_total_price(item_in)
@@ -39,7 +49,13 @@ class TransactionItemService:
         
         transaction = item_to_update.transaction
         if transaction.status != TransactionStatus.DRAFT:
-            raise AppException(status.HTTP_400_BAD_REQUEST, "Items can only be updated if the transaction is in 'draft' status.")
+            raise AppException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Items can only be updated if the transaction is in 'draft' status."
+            )
+        
+        if item_in.item_id: # check if new item exist
+            item_service.get_by_id(db, item_id=item_id)
         
         updated_item = transaction_item_repo.update(db, db_obj=item_to_update, obj_in=item_in)
         
@@ -59,28 +75,31 @@ class TransactionItemService:
         
         transaction = item_to_delete.transaction
         if transaction.status != TransactionStatus.DRAFT:
-            raise AppException(status.HTTP_400_BAD_REQUEST, "Items can only be deleted if the transaction is in 'draft' status.")
+            raise AppException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Items can only be deleted if the transaction is in 'draft' status."
+            )
             
         deleted_item = transaction_item_repo.remove(db, id=item_id)
         transaction_service._recalculate_total_price(db, transaction=transaction)
         return deleted_item
 
     def _calculate_item_total_price(self, item: TransactionItem) -> int:
-        unit_price = Decimal(item.unit_price)
-        weight_count = Decimal(item.weight_count)
-        ojrat = Decimal(item.ojrat or 0) / 100
-        profit = Decimal(item.profit or 0) / 100
-        tax = Decimal(item.tax or 0) / 100
+        unit_price = Decimal(item.unit_price) # مظنه
+        weight_count = Decimal(item.weight_count) # وزن / تعداد
+        ojrat = Decimal(item.ojrat or 0) / 100 # اجرت
+        profit = Decimal(item.profit or 0) / 100 # سود
+        tax = Decimal(item.tax or 0) / 100 # مالیات
 
-        wage_per_unit = unit_price * ojrat
-        price_after_wage = unit_price + wage_per_unit
-        profit_per_unit = price_after_wage * profit
-        price_after_profit = price_after_wage + profit_per_unit
+        wage_per_unit = unit_price * ojrat # اجرت به ازای واحد (گرم/تعداد)
+        price_after_wage = unit_price + wage_per_unit # قیمت هر واحد بعد از اجرت
+        profit_per_unit = price_after_wage * profit # سود به ازای هر واحد (گرم/تعداد)
+        price_after_profit = price_after_wage + profit_per_unit # قیمت بعد از سود به ازای هر واحد
 
-        net_price = unit_price * weight_count
-        gross_price = price_after_profit * weight_count
+        net_price = unit_price * weight_count # قیمت خالص
+        gross_price = price_after_profit * weight_count # قیمت ناخالص
         
-        tax_amount = (gross_price - net_price) * tax
+        tax_amount = (gross_price - net_price) * tax # قیمت نهایی بعد از مالیات
         
         total_price = gross_price + tax_amount
         return int(total_price)

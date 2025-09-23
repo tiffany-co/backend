@@ -11,6 +11,7 @@ from app.models.enums.transaction import TransactionStatus, TransactionType
 from app.repository.transaction import transaction_repo
 from app.schema.transaction import TransactionCreate, TransactionUpdate
 from app.services.inventory import inventory_service
+from app.services.contact import contact_service
 
 class TransactionService:
     """Service layer for transaction business logic."""
@@ -22,10 +23,16 @@ class TransactionService:
             transaction = transaction_repo.get(db, id=transaction_id)
 
         if not transaction:
-            raise AppException(status.HTTP_404_NOT_FOUND, f"Transaction with ID {transaction_id} not found.")
+            raise AppException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Transaction with ID {transaction_id} not found."
+            )
         
         if not current_user.role == "admin" and transaction.recorder_id != current_user.id:
-            raise AppException(status.HTTP_403_FORBIDDEN, "You do not have permission to view this transaction.")
+            raise AppException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have permission to view this transaction."
+            )
             
         return transaction
 
@@ -33,6 +40,7 @@ class TransactionService:
         return transaction_repo.search(db, current_user=current_user, **kwargs)
 
     def create_transaction(self, db: Session, *, transaction_in: TransactionCreate, current_user: User) -> Transaction:
+        contact_service.get_contact_by_id(db, contact_id=transaction_in.contact_id) # check if contact exist
         create_data = transaction_in.model_dump()
         create_data["recorder_id"] = current_user.id
         return transaction_repo.create(db, obj_in=create_data)
@@ -40,7 +48,13 @@ class TransactionService:
     def update_transaction(self, db: Session, *, transaction_id: uuid.UUID, transaction_in: TransactionUpdate, current_user: User) -> Transaction:
         transaction = self.get_transaction_by_id(db, transaction_id=transaction_id, current_user=current_user)
         if transaction.status != TransactionStatus.DRAFT:
-            raise AppException(status.HTTP_400_BAD_REQUEST, "Only transactions in 'draft' status can be updated.")
+            raise AppException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Only transactions in 'draft' status can be updated."
+            )
+        
+        if transaction_in.contact_id: # check if new contact exist
+            contact_service.get_contact_by_id(db, contact_id=transaction_in.contact_id)
         
         updated_transaction = transaction_repo.update(db, db_obj=transaction, obj_in=transaction_in)
         self._recalculate_total_price(db, transaction=updated_transaction)
@@ -50,7 +64,10 @@ class TransactionService:
     def delete_transaction(self, db: Session, *, transaction_id: uuid.UUID, current_user: User) -> Transaction:
         transaction = self.get_transaction_by_id(db, transaction_id=transaction_id, current_user=current_user)
         if transaction.status != TransactionStatus.DRAFT:
-            raise AppException(status.HTTP_400_BAD_REQUEST, "Only transactions in 'draft' status can be deleted.")
+            raise AppException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Only transactions in 'draft' status can be deleted."
+            )
         
         return transaction_repo.remove(db, id=transaction.id)
 
@@ -75,13 +92,19 @@ class TransactionService:
         
         if current_user.role == "admin":
             if transaction.status not in [TransactionStatus.DRAFT, TransactionStatus.APPROVED_BY_USER]:
-                raise AppException(status.HTTP_400_BAD_REQUEST, "This transaction cannot be approved by an admin at its current status.")
+                raise AppException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="This transaction cannot be approved by an admin at its current status."
+                )
             transaction.status = TransactionStatus.APPROVED_BY_ADMIN
             inventory_service.update_from_transaction(db, transaction=transaction)
 
         else: # Regular user
             if transaction.status != TransactionStatus.DRAFT:
-                raise AppException(status.HTTP_400_BAD_REQUEST, "Only transactions in 'draft' status can be approved.")
+                raise AppException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Only transactions in 'draft' status can be approved."
+                )
             transaction.status = TransactionStatus.APPROVED_BY_USER
 
         db.commit()
@@ -94,10 +117,16 @@ class TransactionService:
 
         if current_user.role == "admin":
             if transaction.status not in [TransactionStatus.APPROVED_BY_ADMIN, TransactionStatus.APPROVED_BY_USER]:
-                 raise AppException(status.HTTP_400_BAD_REQUEST, "This transaction cannot be rejected.")
+                raise AppException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="This transaction cannot be rejected."
+                )
         else: # Regular user
              if transaction.status != TransactionStatus.APPROVED_BY_USER:
-                raise AppException(status.HTTP_400_BAD_REQUEST, "You can only reject transactions you have previously approved.")
+                raise AppException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="You can only reject transactions you have previously approved."
+                )
         
         transaction.status = TransactionStatus.DRAFT
         db.add(transaction)

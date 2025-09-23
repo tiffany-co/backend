@@ -22,6 +22,8 @@ class TransactionItemCreate(TransactionItemBase):
     pass
 
 class TransactionItemUpdate(BaseModel):
+    item_id: Optional[uuid.UUID] = None
+    transaction_type: Optional[uuid.UUID] = None
     title: Optional[str] = Field(None, min_length=1)
     weight_count: Optional[Decimal] = Field(None, gt=0)
     unit_price: Optional[int] = Field(None, ge=0)

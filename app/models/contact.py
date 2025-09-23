@@ -24,6 +24,7 @@ class Contact(BaseModel):
 
     # SQLAlchemy relationship to easily access the creator user object from a contact object.
     creator = relationship("User", back_populates="contacts")
+    transactions = relationship("Transaction", back_populates="contact")
 
     def __repr__(self):
         """

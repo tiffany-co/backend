@@ -10,7 +10,7 @@ class Inventory(BaseModel):
     """
     __tablename__ = "inventory"
 
-    transaction_id = Column(ForeignKey("transaction.id"), nullable=True)
+    transaction_id = Column(ForeignKey("transaction.id", ondelete="SET NULL"), nullable=True)
     description = Column(Text, nullable=True, comment="Note for manual adjustments, or link to a transaction.")
 
     # --- Balances ---
