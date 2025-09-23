@@ -6,7 +6,7 @@ from fastapi import status
 from app.core.exceptions import AppException
 from app.models.user import User
 from app.models.transaction_item import TransactionItem
-from app.models.enums.transaction import TransactionStatus
+from app.models.enums.transaction import TransactionStatus, TransactionType
 from app.repository.transaction_item import transaction_item_repo
 from app.schema.transaction_item import TransactionItemCreate, TransactionItemUpdate
 from app.services.transaction import transaction_service
@@ -38,7 +38,8 @@ class TransactionItemService:
         item_service.get_by_id(db, item_id=item_in.item_id)
         
         create_data = item_in.model_dump()
-        create_data["total_price"] = self._calculate_item_total_price(item_in)
+        
+        create_data["total_price"] = self._calculate_item_total_price(item_in, item_in.transaction_type)
         
         new_item = transaction_item_repo.create(db, obj_in=create_data)
         transaction_service._recalculate_total_price(db, transaction=transaction)
@@ -63,7 +64,7 @@ class TransactionItemService:
         update_data = item_in.model_dump(exclude_unset=True)
         recalc_fields = {'unit_price', 'weight_count', 'ojrat', 'profit', 'tax'}
         if any(field in update_data for field in recalc_fields):
-            updated_item.total_price = self._calculate_item_total_price(updated_item)
+            updated_item.total_price = self._calculate_item_total_price(updated_item, updated_item.transaction_type)
             db.commit()
             db.refresh(updated_item)
             
@@ -84,7 +85,7 @@ class TransactionItemService:
         transaction_service._recalculate_total_price(db, transaction=transaction)
         return deleted_item
 
-    def _calculate_item_total_price(self, item: TransactionItem) -> int:
+    def _calculate_item_total_price(self, item: TransactionItem, transaction_type: TransactionType) -> int:
         unit_price = Decimal(item.unit_price) # مظنه
         weight_count = Decimal(item.weight_count) # وزن / تعداد
         ojrat = Decimal(item.ojrat or 0) / 100 # اجرت
@@ -102,6 +103,10 @@ class TransactionItemService:
         tax_amount = (gross_price - net_price) * tax # قیمت نهایی بعد از مالیات
         
         total_price = gross_price + tax_amount
+        
+        if transaction_type == TransactionType.BUY: # We have to pay here!
+            total_price *= -1
+            
         return int(total_price)
 
 transaction_item_service = TransactionItemService()
