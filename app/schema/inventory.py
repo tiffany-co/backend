@@ -1,7 +1,7 @@
-# app/schema/inventory.py
 from pydantic import BaseModel, Field, model_validator, ConfigDict
 from typing import Optional
 from decimal import Decimal
+import uuid
 
 from .base import BaseSchema
 
@@ -32,6 +32,7 @@ class InventoryItemsSchema(BaseModel):
 class InventoryPublic(BaseModel):
     """Base schema for displaying an inventory snapshot."""
     description: Optional[str] = None
+    transaction_id: Optional[uuid.UUID] = None
     money_balance: int = Field(..., description="Cash balance in Iranian Rials.")
     inventory: InventoryItemsSchema
 
