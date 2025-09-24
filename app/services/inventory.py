@@ -43,6 +43,7 @@ def _format_inventory(inventory: Inventory | None) -> Dict[str, Any]:
         "id": inventory.id,
         "created_at": inventory.created_at,
         "updated_at": inventory.updated_at,
+        "transaction_id": inventory.transaction_id,
         "description": inventory.description,
         "money_balance": inventory.money_balance,
         "inventory": inventory_items,
@@ -69,7 +70,7 @@ class InventoryService:
         # Start with previous snapshot or empty
         new_snapshot_data = _extract_model_attrs(
             latest_inventory,
-            exclude=["id", "created_at", "updated_at"]
+            exclude=["id", "created_at", "updated_at", "transaction_id"]
         ) if latest_inventory else {}
 
         # Apply adjustments
@@ -89,15 +90,17 @@ class InventoryService:
     def update_from_transaction(self, db: Session, *, transaction: Transaction):
         """Creates a new inventory snapshot based on an approved transaction."""
         new_snapshot_data = self._calculate_new_snapshot(db, transaction, is_reversal=False)
-        new_snapshot_data["description"] = f"Inventory update from transaction {transaction.id}"
+        new_snapshot_data["description"] = f"INVENTORY UPDATE FROM TRANSACTION {transaction.id}"
+        # new_snapshot_data["transaction_id"] = transaction.id
         inventory_repo.create(db, obj_in=new_snapshot_data)
 
     def revert_from_transaction(self, db: Session, *, transaction: Transaction):
         """Creates a new inventory snapshot that reverses a previously approved transaction."""
         new_snapshot_data = self._calculate_new_snapshot(db, transaction, is_reversal=True)
-        new_snapshot_data["description"] = f"REVERSAL of inventory update for transaction {transaction.id}"
+        new_snapshot_data["description"] = f"REVERSAL OF INVENTORY UPDATE FROM TRANSACTION {transaction.id}"
+        # new_snapshot_data["transaction_id"] = transaction.id
         inventory_repo.create(db, obj_in=new_snapshot_data)
-
+        
     def _get_new_snapshot_base(self, latest_inventory: Inventory | None) -> Dict[str, Any]:
         """Gets the state of the last inventory, or a zeroed-out state if none exists."""
         if latest_inventory:
@@ -124,7 +127,7 @@ class InventoryService:
                         new_snapshot_data[item_key] += trans_item.weight_count  # Add back
                     else:  # BUY
                         new_snapshot_data[item_key] -= trans_item.weight_count  # Remove
-                else:
+                else: # The transaction was successful
                     if trans_item.transaction_type == TransactionType.SELL:
                         new_snapshot_data[item_key] -= trans_item.weight_count
                     else:  # BUY

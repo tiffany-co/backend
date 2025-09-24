@@ -76,11 +76,9 @@ class TransactionService:
         # This ensures items are loaded if they aren't already
         db.refresh(transaction, attribute_names=['items'])
 
+        # we calculate single total prices for items
         for item in transaction.items:
-            if item.transaction_type == TransactionType.SELL:
-                total += item.total_price
-            else: # BUY
-                total -= item.total_price
+            total += item.total_price
         
         transaction.total_price = total - transaction.discount
         db.add(transaction)
