@@ -16,7 +16,7 @@ async def lifespan(app: FastAPI):
     Handles application startup and shutdown events.
     """
     # On startup
-    print("--- Application Startup ---")
+    logger.info("--- Application Startup ---")
     setup_logging()
     
     # The listener is registered via the import, but this is a good place

@@ -33,7 +33,7 @@ def create_saved_bank_account(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.require_role([UserRole.ADMIN])),
 ):
-    return saved_bank_account_service.create(db=db, account_in=account_in, current_user=current_user)
+    return saved_bank_account_service.create(db=db, account_in=account_in)
 
 
 @router.get(
@@ -93,7 +93,7 @@ def update_saved_bank_account(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.require_role([UserRole.ADMIN])),
 ):
-    return saved_bank_account_service.update(db=db, account_id=account_id, account_in=account_in, current_user=current_user)
+    return saved_bank_account_service.update(db=db, account_id=account_id, account_in=account_in)
 
 
 @router.delete(
@@ -113,5 +113,5 @@ def delete_saved_bank_account(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.require_role([UserRole.ADMIN])),
 ):
-    saved_bank_account_service.delete(db, account_id=account_id, current_user=current_user)
+    saved_bank_account_service.delete(db, account_id=account_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

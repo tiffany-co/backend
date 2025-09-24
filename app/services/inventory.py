@@ -4,11 +4,11 @@ from sqlalchemy.inspection import inspect
 
 from app.models.user import User
 from app.models.inventory import Inventory
+from app.models.transaction import Transaction
+from app.models.enums.transaction import TransactionType
 from app.models.enums.item_type import ItemType
 from app.repository.inventory import inventory_repo
 from app.schema.inventory import InventoryAdjust
-from app.logging_config import audit_logger
-
 
 # --- Helpers ---
 def _extract_model_attrs(model: Any, exclude: List[str] = None) -> Dict[str, Any]:
@@ -43,6 +43,7 @@ def _format_inventory(inventory: Inventory | None) -> Dict[str, Any]:
         "id": inventory.id,
         "created_at": inventory.created_at,
         "updated_at": inventory.updated_at,
+        "transaction_id": inventory.transaction_id,
         "description": inventory.description,
         "money_balance": inventory.money_balance,
         "inventory": inventory_items,
@@ -62,14 +63,14 @@ class InventoryService:
         """Retrieve and format the latest inventory snapshot."""
         return _format_inventory(inventory_repo.get_latest(db))
 
-    def adjust_inventory(self, db: Session, *, adjustment_in: InventoryAdjust, current_user: User) -> Dict[str, Any]:
+    def adjust_inventory(self, db: Session, *, adjustment_in: InventoryAdjust) -> Dict[str, Any]:
         """Create a new inventory snapshot based on manual adjustments."""
         latest_inventory = inventory_repo.get_latest(db)
 
         # Start with previous snapshot or empty
         new_snapshot_data = _extract_model_attrs(
             latest_inventory,
-            exclude=["id", "created_at", "updated_at"]
+            exclude=["id", "created_at", "updated_at", "transaction_id"]
         ) if latest_inventory else {}
 
         # Apply adjustments
@@ -84,11 +85,55 @@ class InventoryService:
         # Persist new snapshot
         new_record = inventory_repo.create(db, obj_in=new_snapshot_data)
 
-        audit_logger.info(
-            f"Manual inventory adjustment by '{current_user.username}'. "
-            f"Description: {adjustment_in.description}"
-        )
         return _format_inventory(new_record)
 
+    def update_from_transaction(self, db: Session, *, transaction: Transaction):
+        """Creates a new inventory snapshot based on an approved transaction."""
+        new_snapshot_data = self._calculate_new_snapshot(db, transaction, is_reversal=False)
+        new_snapshot_data["description"] = f"INVENTORY UPDATE FROM TRANSACTION {transaction.id}"
+        # new_snapshot_data["transaction_id"] = transaction.id
+        inventory_repo.create(db, obj_in=new_snapshot_data)
+
+    def revert_from_transaction(self, db: Session, *, transaction: Transaction):
+        """Creates a new inventory snapshot that reverses a previously approved transaction."""
+        new_snapshot_data = self._calculate_new_snapshot(db, transaction, is_reversal=True)
+        new_snapshot_data["description"] = f"REVERSAL OF INVENTORY UPDATE FROM TRANSACTION {transaction.id}"
+        # new_snapshot_data["transaction_id"] = transaction.id
+        inventory_repo.create(db, obj_in=new_snapshot_data)
+        
+    def _get_new_snapshot_base(self, latest_inventory: Inventory | None) -> Dict[str, Any]:
+        """Gets the state of the last inventory, or a zeroed-out state if none exists."""
+        if latest_inventory:
+            return _extract_model_attrs(
+                latest_inventory, exclude=["id", "created_at", "updated_at", "transaction_id"]
+            )
+        
+        # If no inventory exists, create a zeroed-out base
+        base = {item.value: 0 for item in ItemType}
+        base['money_balance'] = 0
+        return base
+
+    def _calculate_new_snapshot(self, db: Session, transaction: Transaction, is_reversal: bool) -> Dict[str, Any]:
+        """Calculates the next inventory state from a transaction."""
+        latest_inventory = inventory_repo.get_latest(db)
+        new_snapshot_data = self._get_new_snapshot_base(latest_inventory)
+
+        for trans_item in transaction.items:
+            item_key = trans_item.item.name
+            if item_key in new_snapshot_data:
+                # If it's a reversal, flip the logic
+                if is_reversal:
+                    if trans_item.transaction_type == TransactionType.SELL:
+                        new_snapshot_data[item_key] += trans_item.weight_count  # Add back
+                    else:  # BUY
+                        new_snapshot_data[item_key] -= trans_item.weight_count  # Remove
+                else: # The transaction was successful
+                    if trans_item.transaction_type == TransactionType.SELL:
+                        new_snapshot_data[item_key] -= trans_item.weight_count
+                    else:  # BUY
+                        new_snapshot_data[item_key] += trans_item.weight_count
+        
+        new_snapshot_data["transaction_id"] = transaction.id
+        return new_snapshot_data
 
 inventory_service = InventoryService()

@@ -18,7 +18,31 @@ router = APIRouter()
     summary="[Admin] Search Audit Logs",
     description="Allows an administrator to search and filter the audit log to track changes.",
     responses={
-        200: {"description": "A list of audit log entries matching the criteria."},
+            200: {
+            "description": "A list of audit log entries matching the criteria.",
+            "content": {
+                "application/json": {
+                    "example": [
+                        {
+                            "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+                            "created_at": "2025-09-20T09:50:00.123Z",
+                            "updated_at": "2025-09-20T09:50:00.123Z",
+                            "user_id": "f4b1b2b3-c4d5-6789-0123-456789abcdef",
+                            "operation": "UPDATE",
+                            "table_name": "user",
+                            "before_state": {
+                                "id": "c1d2e3f4-a5b6-7890-1234-567890abcdef",
+                                "full_name": "Old Name"
+                            },
+                            "after_state": {
+                                "id": "c1d2e3f4-a5b6-7890-1234-567890abcdef",
+                                "full_name": "New Name"
+                            }
+                        }
+                    ]
+                }
+            }
+        },
         401: {"model": ErrorDetail, "description": "Unauthorized"},
         403: {"model": ErrorDetail, "description": "Forbidden"},
     }

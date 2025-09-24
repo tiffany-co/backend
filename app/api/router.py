@@ -11,7 +11,9 @@ from app.api.v1 import (
     inventory,
     users_me,
     users_admin,
-    audit_logs
+    audit_logs,
+    transactions,
+    transaction_items,
 )
 # --- Main API Router ---
 # This router includes all the version 1 routers.
@@ -47,3 +49,7 @@ api_router.include_router(
 )
 api_router.include_router(inventory.router, prefix="/inventory", tags=["inventory"])
 api_router.include_router(audit_logs.router, prefix="/audit-logs", tags=["Audit Logs"])
+
+# Transaction Management
+api_router.include_router(transactions.router, prefix="/transactions", tags=["Transactions"])
+api_router.include_router(transaction_items.router, prefix="/transaction-items", tags=["Transaction Items"])
