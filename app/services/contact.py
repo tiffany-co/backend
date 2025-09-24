@@ -87,9 +87,16 @@ class ContactService:
     
     def delete_contact(self, db: Session, *, contact_id: uuid.UUID) -> Contact:
         """Handles the business logic for deleting a contact."""
-        self.get_contact_by_id(db, contact_id=contact_id)
-        deleted_contact = contact_repo.remove(db, id=contact_id)
-        return deleted_contact
+        contact_to_delete = self.get_contact_by_id(db, contact_id=contact_id)
+        
+        # --- Business logic check to prevent deleting contacts with history ---
+        if contact_to_delete.transactions:
+            raise AppException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot delete a contact that has associated transactions. Please reassign transactions first."
+            )
+
+        return contact_repo.remove(db, id=contact_id)
 
     def search_contacts(
         self,
