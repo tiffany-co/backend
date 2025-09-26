@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from fastapi import status
 
 from app.core.exceptions import AppException
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.models.transaction import Transaction
 from app.models.enums.transaction import TransactionStatus, TransactionType
 from app.repository.transaction import transaction_repo
@@ -28,7 +28,7 @@ class TransactionService:
                 detail=f"Transaction with ID {transaction_id} not found."
             )
         
-        if not current_user.role == "admin" and transaction.recorder_id != current_user.id:
+        if not current_user.role == UserRole.ADMIN and transaction.recorder_id != current_user.id:
             raise AppException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You do not have permission to view this transaction."
@@ -88,7 +88,7 @@ class TransactionService:
     def approve_transaction(self, db: Session, *, transaction_id: uuid.UUID, current_user: User) -> Transaction:
         transaction = self.get_transaction_by_id(db, transaction_id=transaction_id, current_user=current_user, with_items=True)
         
-        if current_user.role == "admin":
+        if current_user.role == UserRole.ADMIN:
             if transaction.status not in [TransactionStatus.DRAFT, TransactionStatus.APPROVED_BY_USER]:
                 raise AppException(
                     status_code=status.HTTP_400_BAD_REQUEST,
@@ -113,7 +113,7 @@ class TransactionService:
         transaction = self.get_transaction_by_id(db, transaction_id=transaction_id, current_user=current_user, with_items=True)
         original_status = transaction.status
 
-        if current_user.role == "admin":
+        if current_user.role == UserRole.ADMIN:
             if transaction.status not in [TransactionStatus.APPROVED_BY_ADMIN, TransactionStatus.APPROVED_BY_USER]:
                 raise AppException(
                     status_code=status.HTTP_400_BAD_REQUEST,
