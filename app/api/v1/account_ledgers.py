@@ -35,7 +35,7 @@ def create_account_ledger(
     "/search",
     response_model=List[AccountLedgerPublic],
     summary="Search Account Ledger Entries",
-    description="Search and filter account ledger entries. Admins can search all entries; users can only search within their own contacts.",
+    description="Search and filter account ledger entries. All authenticated users can search all entries.",
     responses={
         200: {"description": "A list of account ledger entries matching the criteria."},
         401: {"model": ErrorDetail, "description": "Unauthorized"},
@@ -45,6 +45,7 @@ def search_account_ledgers(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_user),
     has_debt: Optional[bool] = Query(None, description="Set to 'true' to find entries with a non-zero debt."),
+    debt: Optional[int] = Query(None, description="Search for ledger entries with a debt amount close to this value."),
     bank_name: Optional[str] = Query(None, description="Filter by bank name (case-insensitive, partial match)."),
     contact_id: Optional[uuid.UUID] = Query(None, description="Filter by a specific contact ID."),
     transaction_id: Optional[uuid.UUID] = Query(None, description="Filter by a specific transaction ID."),
@@ -54,6 +55,7 @@ def search_account_ledgers(
     return account_ledger_service.search(
         db,
         has_debt=has_debt,
+        debt=debt,
         bank_name=bank_name,
         contact_id=contact_id,
         transaction_id=transaction_id,

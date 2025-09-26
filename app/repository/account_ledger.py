@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import or_, and_, desc, asc, nulls_last
+from sqlalchemy import or_, and_, desc, asc, nulls_last, func
 from typing import List, Optional, Any
 import uuid
 
@@ -16,6 +16,7 @@ class AccountLedgerRepository(BaseRepository[AccountLedger, AccountLedgerCreate,
         db: Session,
         *,
         has_debt: Optional[bool] = None,
+        debt: Optional[int] = None,
         bank_name: Optional[str] = None,
         contact_id: Optional[uuid.UUID] = None,
         transaction_id: Optional[uuid.UUID] = None,
@@ -43,8 +44,15 @@ class AccountLedgerRepository(BaseRepository[AccountLedger, AccountLedgerCreate,
         if transaction_id:
             query = query.filter(self.model.transaction_id == transaction_id)
             
-        # Sort by deadline ascending, with NULLs (no deadline) appearing last.
-        return query.order_by(nulls_last(asc(self.model.deadline))).offset(skip).limit(limit).all()
+        # --- Conditional Sorting ---
+        if debt is not None:
+            # Order by the absolute difference from the provided debt amount
+            query = query.order_by(func.abs(self.model.debt - debt).asc())
+        else:
+            # Default sort by deadline ascending, with NULLs (no deadline) appearing last.
+            query = query.order_by(nulls_last(asc(self.model.deadline)))
+
+        return query.offset(skip).limit(limit).all()
 
 account_ledger_repo = AccountLedgerRepository(AccountLedger)
 
