@@ -25,6 +25,7 @@ class Transaction(BaseModel):
     contact = relationship("Contact")
     items = relationship("TransactionItem", back_populates="transaction", cascade="all, delete-orphan")
     inventory_entry = relationship("Inventory", back_populates="transaction", uselist=False)
+    account_ledger_entry = relationship("AccountLedger", back_populates="transaction", uselist=False, cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Transaction(id={self.id}, status='{self.status.value}')>"
