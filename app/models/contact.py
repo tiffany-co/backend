@@ -1,5 +1,3 @@
-# app/models/contact.py
-
 from sqlalchemy import Column, String, Enum, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
@@ -25,6 +23,7 @@ class Contact(BaseModel):
     # SQLAlchemy relationship to easily access the creator user object from a contact object.
     creator = relationship("User", back_populates="contacts")
     transactions = relationship("Transaction", back_populates="contact")
+    account_ledgers = relationship("AccountLedger", back_populates="contact", cascade="all, delete-orphan")
 
     def __repr__(self):
         """
