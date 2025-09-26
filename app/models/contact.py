@@ -1,5 +1,3 @@
-# app/models/contact.py
-
 from sqlalchemy import Column, String, Enum, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
