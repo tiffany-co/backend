@@ -14,6 +14,7 @@ from app.api.v1 import (
     audit_logs,
     transactions,
     transaction_items,
+    account_ledgers
 )
 # --- Main API Router ---
 # This router includes all the version 1 routers.
@@ -53,3 +54,4 @@ api_router.include_router(audit_logs.router, prefix="/audit-logs", tags=["Audit 
 # Transaction Management
 api_router.include_router(transactions.router, prefix="/transactions", tags=["Transactions"])
 api_router.include_router(transaction_items.router, prefix="/transaction-items", tags=["Transaction Items"])
+api_router.include_router(account_ledgers.router, prefix="/account-ledgers", tags=["Account Ledgers"])
