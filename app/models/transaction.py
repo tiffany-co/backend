@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.models.base import BaseModel
-from .enums.transaction import TransactionStatus
+from .enums.shared import ApprovalStatus
 
 class Transaction(BaseModel):
     """
@@ -15,7 +15,7 @@ class Transaction(BaseModel):
     contact_id = Column(UUID(as_uuid=True), ForeignKey("contact.id"), nullable=False, index=True)
     
     note = Column(Text, nullable=True)
-    status = Column(Enum(TransactionStatus, native_enum=False), nullable=False, default=TransactionStatus.DRAFT, index=True)
+    status = Column(Enum(ApprovalStatus, native_enum=False), nullable=False, default=ApprovalStatus.DRAFT, index=True)
     
     discount = Column(BigInteger, nullable=False, default=0)
     total_price = Column(BigInteger, nullable=False, default=0)

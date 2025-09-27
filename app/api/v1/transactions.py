@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session
 
 from app.api import deps
 from app.models.user import User
-from app.models.enums.transaction import TransactionStatus, TransactionType
+from app.models.enums.transaction import TransactionType
+from app.models.enums.shared import ApprovalStatus
 from app.schema.transaction import (
     TransactionCreate, 
     TransactionPublic, 
@@ -49,7 +50,7 @@ def search_transactions(
     current_user: User = Depends(deps.get_current_active_user),
     recorder_id: Optional[uuid.UUID] = Query(None, description="Filter by the user who recorded the transaction."),
     contact_id: Optional[uuid.UUID] = Query(None, description="Filter by the contact associated with the transaction."),
-    status: Optional[TransactionStatus] = Query(None, description="Filter by transaction status."),
+    status: Optional[ApprovalStatus] = Query(None, description="Filter by transaction status."),
     start_time: Optional[datetime] = Query(None, description="ISO 8601 format. e.g., 2025-09-20T10:00:00"),
     end_time: Optional[datetime] = Query(None, description="ISO 8601 format. e.g., 2025-09-21T10:00:00"),
     item_title: Optional[str] = Query(None, description="Find transactions containing an item with this title (partial match)."),
@@ -76,7 +77,7 @@ def search_transactions_detailed(
     current_user: User = Depends(deps.get_current_active_user),
     recorder_id: Optional[uuid.UUID] = Query(None, description="Filter by the user who recorded the transaction."),
     contact_id: Optional[uuid.UUID] = Query(None, description="Filter by the contact associated with the transaction."),
-    status: Optional[TransactionStatus] = Query(None, description="Filter by transaction status."),
+    status: Optional[ApprovalStatus] = Query(None, description="Filter by transaction status."),
     start_time: Optional[datetime] = Query(None, description="ISO 8601 format. e.g., 2025-09-20T10:00:00"),
     end_time: Optional[datetime] = Query(None, description="ISO 8601 format. e.g., 2025-09-21T10:00:00"),
     item_title: Optional[str] = Query(None, description="Find transactions containing an item with this title (partial match)."),

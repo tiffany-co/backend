@@ -7,7 +7,7 @@ from fastapi import status
 from app.core.exceptions import AppException
 from app.models.user import User, UserRole
 from app.models.transaction import Transaction
-from app.models.enums.transaction import TransactionStatus, TransactionType
+from app.models.enums.shared import ApprovalStatus
 from app.repository.transaction import transaction_repo
 from app.schema.transaction import TransactionCreate, TransactionUpdate
 from app.services.inventory import inventory_service
@@ -47,7 +47,7 @@ class TransactionService:
 
     def update_transaction(self, db: Session, *, transaction_id: uuid.UUID, transaction_in: TransactionUpdate, current_user: User) -> Transaction:
         transaction = self.get_transaction_by_id(db, transaction_id=transaction_id, current_user=current_user)
-        if transaction.status != TransactionStatus.DRAFT:
+        if transaction.status != ApprovalStatus.DRAFT:
             raise AppException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Only transactions in 'draft' status can be updated."
@@ -63,7 +63,7 @@ class TransactionService:
 
     def delete_transaction(self, db: Session, *, transaction_id: uuid.UUID, current_user: User) -> Transaction:
         transaction = self.get_transaction_by_id(db, transaction_id=transaction_id, current_user=current_user)
-        if transaction.status != TransactionStatus.DRAFT:
+        if transaction.status != ApprovalStatus.DRAFT:
             raise AppException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Only transactions in 'draft' status can be deleted."
@@ -89,21 +89,21 @@ class TransactionService:
         transaction = self.get_transaction_by_id(db, transaction_id=transaction_id, current_user=current_user, with_items=True)
         
         if current_user.role == UserRole.ADMIN:
-            if transaction.status not in [TransactionStatus.DRAFT, TransactionStatus.APPROVED_BY_USER]:
+            if transaction.status not in [ApprovalStatus.DRAFT, ApprovalStatus.APPROVED_BY_USER]:
                 raise AppException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="This transaction cannot be approved by an admin at its current status."
                 )
-            transaction.status = TransactionStatus.APPROVED_BY_ADMIN
+            transaction.status = ApprovalStatus.APPROVED_BY_ADMIN
             inventory_service.update_from_transaction(db, transaction=transaction)
 
         else: # Regular user
-            if transaction.status != TransactionStatus.DRAFT:
+            if transaction.status != ApprovalStatus.DRAFT:
                 raise AppException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Only transactions in 'draft' status can be approved."
                 )
-            transaction.status = TransactionStatus.APPROVED_BY_USER
+            transaction.status = ApprovalStatus.APPROVED_BY_USER
 
         db.commit()
         db.refresh(transaction)
@@ -114,23 +114,23 @@ class TransactionService:
         original_status = transaction.status
 
         if current_user.role == UserRole.ADMIN:
-            if transaction.status not in [TransactionStatus.APPROVED_BY_ADMIN, TransactionStatus.APPROVED_BY_USER]:
+            if transaction.status not in [ApprovalStatus.APPROVED_BY_ADMIN, ApprovalStatus.APPROVED_BY_USER]:
                 raise AppException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="This transaction cannot be rejected."
                 )
         else: # Regular user
-             if transaction.status != TransactionStatus.APPROVED_BY_USER:
+             if transaction.status != ApprovalStatus.APPROVED_BY_USER:
                 raise AppException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="You can only reject transactions you have previously approved."
                 )
         
-        transaction.status = TransactionStatus.DRAFT
+        transaction.status = ApprovalStatus.DRAFT
         db.add(transaction)
         
         # If the transaction was previously admin approved, its inventory changes must be reversed.
-        if original_status == TransactionStatus.APPROVED_BY_ADMIN:
+        if original_status == ApprovalStatus.APPROVED_BY_ADMIN:
             inventory_service.revert_from_transaction(db, transaction=transaction)
 
         db.commit()
