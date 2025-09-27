@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.models.base import BaseModel
-from .enums.transaction import TransactionStatus
+from .enums.shared import ApprovalStatus
 
 class Transaction(BaseModel):
     """
@@ -15,7 +15,7 @@ class Transaction(BaseModel):
     contact_id = Column(UUID(as_uuid=True), ForeignKey("contact.id"), nullable=False, index=True)
     
     note = Column(Text, nullable=True)
-    status = Column(Enum(TransactionStatus, native_enum=False), nullable=False, default=TransactionStatus.DRAFT, index=True)
+    status = Column(Enum(ApprovalStatus, native_enum=False), nullable=False, default=ApprovalStatus.DRAFT, index=True)
     
     discount = Column(BigInteger, nullable=False, default=0)
     total_price = Column(BigInteger, nullable=False, default=0)
@@ -25,6 +25,8 @@ class Transaction(BaseModel):
     contact = relationship("Contact")
     items = relationship("TransactionItem", back_populates="transaction", cascade="all, delete-orphan")
     inventory_entry = relationship("Inventory", back_populates="transaction", uselist=False)
-
+    account_ledger_entry = relationship("AccountLedger", back_populates="transaction", uselist=False, cascade="all, delete-orphan")
+    payments = relationship("Payment", back_populates="transaction")
+    
     def __repr__(self):
         return f"<Transaction(id={self.id}, status='{self.status.value}')>"

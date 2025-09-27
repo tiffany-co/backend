@@ -89,11 +89,22 @@ class ContactService:
         """Handles the business logic for deleting a contact."""
         contact_to_delete = self.get_contact_by_id(db, contact_id=contact_id)
         
-        # --- Business logic check to prevent deleting contacts with history ---
         if contact_to_delete.transactions:
             raise AppException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot delete a contact that has associated transactions. Please reassign transactions first."
+                detail="Cannot delete a contact that has associated transactions."
+            )
+        
+        if contact_to_delete.account_ledgers:
+            raise AppException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot delete a contact that has account ledger entries."
+            )
+            
+        if contact_to_delete.payments:
+            raise AppException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot delete a contact that has associated payments."
             )
 
         return contact_repo.remove(db, id=contact_id)

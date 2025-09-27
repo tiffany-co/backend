@@ -3,8 +3,8 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime
 
+from app.models.enums.shared import ApprovalStatus
 from .base import BaseSchema
-from app.models.enums.transaction import TransactionStatus
 from .transaction_item import TransactionItemPublic
 from .user import UserPublic
 from .contact import ContactPublic
@@ -31,7 +31,7 @@ class TransactionPublic(BaseSchema):
     recorder_id: uuid.UUID
     contact_id: uuid.UUID
     note: Optional[str]
-    status: TransactionStatus
+    status: ApprovalStatus
     discount: int
     total_price: int
     

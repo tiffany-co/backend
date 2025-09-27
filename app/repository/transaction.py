@@ -6,8 +6,9 @@ import uuid
 from app.repository.base import BaseRepository, CreateSchemaType, UpdateSchemaType
 from app.models.transaction import Transaction
 from app.models.transaction_item import TransactionItem
-from app.models.user import User
-from app.models.enums.transaction import TransactionStatus, TransactionType
+from app.models.user import User, UserRole
+from app.models.enums.transaction import TransactionType
+from app.models.enums.shared import ApprovalStatus
 
 class TransactionRepository(BaseRepository[Transaction, CreateSchemaType, UpdateSchemaType]):
     """
@@ -19,7 +20,7 @@ class TransactionRepository(BaseRepository[Transaction, CreateSchemaType, Update
         current_user: User,
         recorder_id: Optional[uuid.UUID] = None,
         contact_id: Optional[uuid.UUID] = None,
-        status: Optional[TransactionStatus] = None,
+        status: Optional[ApprovalStatus] = None,
         start_time: Optional[datetime] = None,
         end_time: Optional[datetime] = None,
         item_title: Optional[str] = None,
@@ -32,7 +33,7 @@ class TransactionRepository(BaseRepository[Transaction, CreateSchemaType, Update
         query = db.query(self.model)
 
         # Admin can see all, user can only see their own
-        if not current_user.role == "admin":
+        if not current_user.role == UserRole.ADMIN:
             query = query.filter(self.model.recorder_id == current_user.id)
         
         # Filtering on TransactionItem requires a join

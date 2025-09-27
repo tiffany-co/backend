@@ -6,7 +6,8 @@ from fastapi import status
 from app.core.exceptions import AppException
 from app.models.user import User
 from app.models.transaction_item import TransactionItem
-from app.models.enums.transaction import TransactionStatus, TransactionType
+from app.models.enums.transaction import TransactionType
+from app.models.enums.shared import ApprovalStatus
 from app.repository.transaction_item import transaction_item_repo
 from app.schema.transaction_item import TransactionItemCreate, TransactionItemUpdate
 from app.services.transaction import transaction_service
@@ -28,7 +29,7 @@ class TransactionItemService:
 
     def create_item(self, db: Session, *, item_in: TransactionItemCreate, current_user: User) -> TransactionItem:
         transaction = transaction_service.get_transaction_by_id(db, transaction_id=item_in.transaction_id, current_user=current_user, with_items=True)
-        if transaction.status != TransactionStatus.DRAFT:
+        if transaction.status != ApprovalStatus.DRAFT:
             raise AppException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Items can only be added to transactions in 'draft' status."
@@ -49,7 +50,7 @@ class TransactionItemService:
         item_to_update = self.get_item_by_id(db, item_id=item_id, current_user=current_user)
         
         transaction = item_to_update.transaction
-        if transaction.status != TransactionStatus.DRAFT:
+        if transaction.status != ApprovalStatus.DRAFT:
             raise AppException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Items can only be updated if the transaction is in 'draft' status."
@@ -75,7 +76,7 @@ class TransactionItemService:
         item_to_delete = self.get_item_by_id(db, item_id=item_id, current_user=current_user)
         
         transaction = item_to_delete.transaction
-        if transaction.status != TransactionStatus.DRAFT:
+        if transaction.status != ApprovalStatus.DRAFT:
             raise AppException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Items can only be deleted if the transaction is in 'draft' status."
