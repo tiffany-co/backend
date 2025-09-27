@@ -22,11 +22,9 @@ class BaseModel(Base):
     __abstract__ = True  # This tells SQLAlchemy not to create a table for this model.
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    created_at = Column(DateTime, default=datetime.utcnow, server_default=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(
-        DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        DateTime(timezone=True),
         server_default=func.now(),
         server_onupdate=func.now(),
     )

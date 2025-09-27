@@ -1,4 +1,5 @@
 from sqlalchemy import Column, String, Text
+from sqlalchemy.orm import relationship
 from app.models.base import BaseModel
 
 class SavedBankAccount(BaseModel):
@@ -11,6 +12,8 @@ class SavedBankAccount(BaseModel):
     name = Column(String, nullable=False, index=True)
     description = Column(Text, nullable=True)
     card_number = Column(String, nullable=True, unique=True, index=True)
+    
+    payments = relationship("Payment", back_populates="saved_bank_account")
 
     def __repr__(self):
         return f"<SavedBankAccount(id={self.id}, name='{self.name}')>"
