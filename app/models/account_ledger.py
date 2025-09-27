@@ -21,6 +21,7 @@ class AccountLedger(BaseModel):
     # --- Relationships ---
     contact = relationship("Contact", back_populates="account_ledgers")
     transaction = relationship("Transaction", back_populates="account_ledger_entry")
+    payments = relationship("Payment", back_populates="account_ledger")
 
     def __repr__(self):
         return f"<AccountLedger(id={self.id}, contact_id={self.contact_id}, debt='{self.debt}')>"
