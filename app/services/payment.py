@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 import uuid
-from typing import List
+from typing import List, Any
 
 from app.core.exceptions import AppException
 from fastapi import status
@@ -28,6 +28,20 @@ class PaymentService:
             raise AppException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have permission to access this payment.")
             
         return payment
+
+    def search(
+        self,
+        db: Session,
+        *,
+        current_user: User,
+        **kwargs: Any
+    ) -> List[Payment]:
+        """Orchestrates the search for payments by calling the repository."""
+        return payment_repo.search(
+            db,
+            current_user=current_user,
+            **kwargs
+        )
 
     def create(self, db: Session, *, payment_in: PaymentCreate, current_user: User) -> Payment:
         """Handles business logic for creating a new payment."""
