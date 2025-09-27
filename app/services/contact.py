@@ -100,6 +100,12 @@ class ContactService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Cannot delete a contact that has account ledger entries."
             )
+            
+        if contact_to_delete.payments:
+            raise AppException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot delete a contact that has associated payments."
+            )
 
         return contact_repo.remove(db, id=contact_id)
 
