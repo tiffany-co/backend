@@ -109,6 +109,36 @@ PREDEFINED_ITEMS_WITH_PROFILES = [
     },
     {
         "item": ItemCreate(
+            name=ItemType.EMAMI_COIN_403,
+            name_fa="سکه امامی ۴۰۳",
+            category="سکه",
+            description="سکه تمام (امامی) ضرب ۱۴۰۳",
+            measurement_type=MeasurementType.COUNTABLE,
+        ),
+        "profiles": _zero_item_financial_profiles
+    },
+    {
+        "item": ItemCreate(
+            name=ItemType.HALF_COIN_403,
+            name_fa="نیم سکه ۴۰۳",
+            category="سکه",
+            description="نیم سکه ضرب ۱۴۰۳",
+            measurement_type=MeasurementType.COUNTABLE,
+        ),
+        "profiles": _zero_item_financial_profiles
+    },
+    {
+        "item": ItemCreate(
+            name=ItemType.QUARTER_COIN_403,
+            name_fa="ربع سکه ۴۰۳",
+            category="سکه",
+            description="ربع سکه ضرب ۱۴۰۳",
+            measurement_type=MeasurementType.COUNTABLE,
+        ),
+        "profiles": _zero_item_financial_profiles
+    },
+    {
+        "item": ItemCreate(
             name=ItemType.EMAMI_COIN_86,
             name_fa="سکه امامی ۸۶",
             category="سکه",
@@ -142,7 +172,7 @@ PREDEFINED_ITEMS_WITH_PROFILES = [
             name=ItemType.EMAMI_COIN_ETC,
             name_fa="سکه امامی غیره",
             category="سکه",
-            description="سکه امامی ضرب نشده در ۸۶",
+            description="سکه امامی ضرب نشده در ۸۶ یا ۱۴۰۳",
             measurement_type=MeasurementType.COUNTABLE,
         ),
         "profiles": _zero_item_financial_profiles
@@ -152,7 +182,7 @@ PREDEFINED_ITEMS_WITH_PROFILES = [
             name=ItemType.HALF_COIN_ETC,
             name_fa="نیم سکه غیره",
             category="سکه",
-            description="نیم سکه ضرب نشده در ۸۶",
+            description="نیم سکه ضرب نشده در ۸۶ یا ۱۴۰۳",
             measurement_type=MeasurementType.COUNTABLE,
         ),
         "profiles": _zero_item_financial_profiles
@@ -162,7 +192,17 @@ PREDEFINED_ITEMS_WITH_PROFILES = [
             name=ItemType.QUARTER_COIN_ETC,
             name_fa="ربع سکه غیره",
             category="سکه",
-            description="ربع سکه ضرب نشده در ۸۶",
+            description="ربع سکه ضرب نشده در ۸۶ یا ۱۴۰۳",
+            measurement_type=MeasurementType.COUNTABLE,
+        ),
+        "profiles": _zero_item_financial_profiles
+    },
+    {
+        "item": ItemCreate(
+            name=ItemType.ONE_GRAM_COIN,
+            name_fa="سکه یک گرمی بانکی",
+            category="سکه",
+            description="سکه یک گرمی بانکی",
             measurement_type=MeasurementType.COUNTABLE,
         ),
         "profiles": _zero_item_financial_profiles

@@ -31,12 +31,16 @@ class Inventory(BaseModel):
     
     # --- Countable (Quantities) ---
     # These are defined as BigInteger for whole numbers.
+    emami_coin_403 = Column(BigInteger, nullable=False, default=0)
+    half_coin_403 = Column(BigInteger, nullable=False, default=0)
+    quarter_coin_403 = Column(BigInteger, nullable=False, default=0)
     emami_coin_86 = Column(BigInteger, nullable=False, default=0)
     half_coin_86 = Column(BigInteger, nullable=False, default=0)
     quarter_coin_86 = Column(BigInteger, nullable=False, default=0)
     emami_coin_etc = Column(BigInteger, nullable=False, default=0)
     half_coin_etc = Column(BigInteger, nullable=False, default=0)
     quarter_coin_etc = Column(BigInteger, nullable=False, default=0)
+    one_gram_coin = Column(BigInteger, nullable=False, default=0)
 
     # Relationship
     transaction = relationship("Transaction", back_populates="inventory_entry")
