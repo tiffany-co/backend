@@ -37,12 +37,12 @@ class PaymentService:
         **kwargs: Any
     ) -> List[Payment]:
         """Orchestrates the search for payments by calling the repository."""
-        return payment_repo.search(
-            db,
-            current_user=current_user,
-            **kwargs
-        )
-
+        # If the user is not an admin, force the search to only include their own payments
+        if current_user.role != UserRole.ADMIN:
+            kwargs["recorder_id"] = current_user.id
+        
+        return payment_repo.search(db, **kwargs)
+    
     def create(self, db: Session, *, payment_in: PaymentCreate, current_user: User) -> Payment:
         """Handles business logic for creating a new payment."""
         payment_data = payment_in.model_dump()

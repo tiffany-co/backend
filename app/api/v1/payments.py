@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Query, status, Response
 from sqlalchemy.orm import Session
 import uuid
 from typing import List, Optional
+from datetime import datetime
 
 from app.api import deps
 from app.models.user import User
@@ -57,6 +58,8 @@ def search_payments(
     account_ledger_id: Optional[uuid.UUID] = Query(None),
     saved_bank_account_id: Optional[uuid.UUID] = Query(None),
     recorder_id: Optional[uuid.UUID] = Query(None, description="[Admin Only] Filter by the user who recorded the payment."),
+    start_time: Optional[datetime] = Query(None, description="Search for payments created after this time."),
+    end_time: Optional[datetime] = Query(None, description="Search for payments created before this time."),
     # Sorting
     amount: Optional[int] = Query(None, description="Sort results by the closest match to this amount."),
     # Pagination
@@ -76,6 +79,8 @@ def search_payments(
         account_ledger_id=account_ledger_id,
         saved_bank_account_id=saved_bank_account_id,
         recorder_id=recorder_id,
+        start_time=start_time,
+        end_time=end_time,
         skip=skip,
         limit=limit
     )
