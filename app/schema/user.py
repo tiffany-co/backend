@@ -27,11 +27,12 @@ class UserCreate(UserBase):
     password: str = Field(..., min_length=8, example="a_strong_password")
 
 # --- Schemas for Creating Admins (just used in create admin script) ---
-class AdminCreate(UserCreate):
+class AdminCreate(UserBase):
     """
     Schema specifically for the create_admin script.
     It inherits from UserCreate and adds the 'role' field, allowing an admin to be created.
     """
+    password: str = Field(..., example="a_strong_password", description="For convenience, we also included the ability to set a weak username for the admin.")
     role: UserRole = Field(..., example=UserRole.ADMIN)
 
 # --- Schemas for Updating Users ---
