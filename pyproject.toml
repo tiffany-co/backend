@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gold-shop-backend"
-version = "0.1.0"
+version = "1.0.0"
 description = "Backend for a gold shop management website"
 authors = ["Rahmat Ansari <rahmat.ansari.dev@gmail.com>"]
 package-mode = false
