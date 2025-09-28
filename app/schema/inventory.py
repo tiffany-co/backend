@@ -33,6 +33,7 @@ class InventoryPublic(BaseModel):
     """Base schema for displaying an inventory snapshot."""
     description: Optional[str] = None
     transaction_id: Optional[uuid.UUID] = None
+    payment_id: Optional[uuid.UUID] = None
     money_balance: int = Field(..., description="Cash balance in Iranian Rials.")
     inventory: InventoryItemsSchema
 
