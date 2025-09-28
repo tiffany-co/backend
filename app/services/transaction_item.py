@@ -24,11 +24,11 @@ class TransactionItemService:
             )
         
         # Piggyback on transaction service to check permissions
-        transaction_service.get_transaction_by_id(db, transaction_id=item.transaction_id, current_user=current_user)
+        transaction_service.get_by_id(db, transaction_id=item.transaction_id, current_user=current_user)
         return item
 
     def create_item(self, db: Session, *, item_in: TransactionItemCreate, current_user: User) -> TransactionItem:
-        transaction = transaction_service.get_transaction_by_id(db, transaction_id=item_in.transaction_id, current_user=current_user, with_items=True)
+        transaction = transaction_service.get_by_id(db, transaction_id=item_in.transaction_id, current_user=current_user, with_items=True)
         if transaction.status != ApprovalStatus.DRAFT:
             raise AppException(
                 status_code=status.HTTP_400_BAD_REQUEST,

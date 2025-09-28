@@ -14,6 +14,11 @@ class TransactionRepository(BaseRepository[Transaction, CreateSchemaType, Update
     """
     Repository for Transaction model operations.
     """
+    # just used in seed demo
+    def get_by_note(self, db: Session, *, note: str) -> Optional[Transaction]:
+        """Get a transaction by its note."""
+        return db.query(self.model).filter(self.model.note == note).first()
+    
     def search(
         self, 
         db: Session, *, 
