@@ -18,7 +18,7 @@ DEMO_USERS = [
         full_name="حسین عجمی",
         username='admin',
         phone_number='09215256536',
-        password='11111111',
+        password='1111',
         role=UserRole.ADMIN
     ),
     UserCreate(

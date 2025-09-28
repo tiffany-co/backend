@@ -24,9 +24,12 @@ def truncate_database():
     console.print("\n--- Database Truncate Utility ---", style="bold yellow")
     
     # Confirm the operation
-    confirm = console.input(
-        "[bold red]WARNING: This will permanently delete all data. Are you sure? (yes/no): [/bold red]"
-    )
+    if '--yes' in sys.argv:
+        confirm = 'yes'
+    else:
+        confirm = console.input(
+            "[bold red]WARNING: This will permanently delete all data. Are you sure? (yes/no): [/bold red]"
+        )
     if confirm.lower() != "yes":
         console.print("Operation cancelled.", style="green")
         return
