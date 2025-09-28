@@ -9,7 +9,7 @@ from .base import BaseSchema
 # This schema is the single source of truth for both programmatic keys and their Persian aliases.
 class InventoryItemsSchema(BaseModel):
     """A detailed breakdown of all inventoried items."""
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(populate_by_name=True, extra='forbid')
 
     new_gold: Decimal = Field(0, description="Balance of New Gold (grams, 2 decimal places)", serialization_alias="طلای نو")
     used_gold: Decimal = Field(0, description="Balance of Used Gold (grams, 2 decimal places)", serialization_alias="طلای مستعمل")
