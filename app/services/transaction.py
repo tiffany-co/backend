@@ -17,7 +17,7 @@ from app.services.contact import contact_service # Import contact service for va
 class TransactionService:
     """Service layer for transaction business logic."""
 
-    def get_transaction_by_id(self, db: Session, *, transaction_id: uuid.UUID, current_user: User, with_items: bool = False) -> Transaction:
+    def get_by_id(self, db: Session, *, transaction_id: uuid.UUID, current_user: User, with_items: bool = False) -> Transaction:
         if with_items:
             transaction = transaction_repo.get_with_items(db, id=transaction_id)
         else:
@@ -31,10 +31,10 @@ class TransactionService:
             
         return transaction
 
-    def search_transactions(self, db: Session, *, current_user: User, **kwargs) -> List[Transaction]:
+    def search(self, db: Session, *, current_user: User, **kwargs) -> List[Transaction]:
         return transaction_repo.search(db, current_user=current_user, **kwargs)
 
-    def create_transaction(self, db: Session, *, transaction_in: TransactionCreate, current_user: User) -> Transaction:
+    def create(self, db: Session, *, transaction_in: TransactionCreate, current_user: User) -> Transaction:
         # Validate that the contact exists before creating the transaction
         contact_service.get_contact_by_id(db, contact_id=transaction_in.contact_id)
         
@@ -42,8 +42,8 @@ class TransactionService:
         create_data["recorder_id"] = current_user.id
         return transaction_repo.create(db, obj_in=create_data)
 
-    def update_transaction(self, db: Session, *, transaction_id: uuid.UUID, transaction_in: TransactionUpdate, current_user: User) -> Transaction:
-        transaction = self.get_transaction_by_id(db, transaction_id=transaction_id, current_user=current_user)
+    def update(self, db: Session, *, transaction_id: uuid.UUID, transaction_in: TransactionUpdate, current_user: User) -> Transaction:
+        transaction = self.get_by_id(db, transaction_id=transaction_id, current_user=current_user)
         if transaction.status != ApprovalStatus.DRAFT:
             raise AppException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only transactions in 'draft' status can be updated.")
         
@@ -56,8 +56,8 @@ class TransactionService:
         return updated_transaction
 
 
-    def delete_transaction(self, db: Session, *, transaction_id: uuid.UUID, current_user: User) -> Transaction:
-        transaction = self.get_transaction_by_id(db, transaction_id=transaction_id, current_user=current_user)
+    def delete(self, db: Session, *, transaction_id: uuid.UUID, current_user: User) -> Transaction:
+        transaction = self.get_by_id(db, transaction_id=transaction_id, current_user=current_user)
         if transaction.status != ApprovalStatus.DRAFT:
             raise AppException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only transactions in 'draft' status can be deleted.")
         
@@ -85,8 +85,8 @@ class TransactionService:
         db.commit()
         db.refresh(transaction)
 
-    def approve_transaction(self, db: Session, *, transaction_id: uuid.UUID, current_user: User) -> Transaction:
-        transaction = self.get_transaction_by_id(db, transaction_id=transaction_id, current_user=current_user, with_items=True)
+    def approve(self, db: Session, *, transaction_id: uuid.UUID, current_user: User) -> Transaction:
+        transaction = self.get_by_id(db, transaction_id=transaction_id, current_user=current_user, with_items=True)
         
         if current_user.role == UserRole.ADMIN:
             if transaction.status not in [ApprovalStatus.DRAFT, ApprovalStatus.APPROVED_BY_USER]:
@@ -103,8 +103,8 @@ class TransactionService:
         db.refresh(transaction)
         return transaction
 
-    def reject_transaction(self, db: Session, *, transaction_id: uuid.UUID, current_user: User) -> Transaction:
-        transaction = self.get_transaction_by_id(db, transaction_id=transaction_id, current_user=current_user, with_items=True)
+    def reject(self, db: Session, *, transaction_id: uuid.UUID, current_user: User) -> Transaction:
+        transaction = self.get_by_id(db, transaction_id=transaction_id, current_user=current_user, with_items=True)
         original_status = transaction.status
 
         if current_user.role == UserRole.ADMIN:

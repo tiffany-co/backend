@@ -7,7 +7,7 @@ from app.core.exceptions import AppException
 from app.models.user import User
 from app.models.enums.user import UserRole
 from app.repository.user import user_repo
-from app.schema.user import UserCreate, UserUpdate, AdminCreate
+from app.schema.user import UserCreate, UserUpdateAdmin, UserUpdateMe, AdminCreate
 from app.core.security import get_password_hash
 
 class UserService:
@@ -66,7 +66,7 @@ class UserService:
         return db_user
 
     def update_user(
-        self, db: Session, *, user_to_update: User, user_in: UserUpdate, current_user: User
+        self, db: Session, *, user_to_update: User, user_in: Union[UserUpdateAdmin, UserUpdateMe], current_user: User
     ) -> User:
         """
         Handles the business logic for updating a user with permission checks.
@@ -77,7 +77,8 @@ class UserService:
                 detail="Admins cannot update other admins.",
             )
 
-        if user_in.is_active is False and user_to_update.id == current_user.id:
+        update_data = user_in.model_dump(exclude_unset=True)
+        if update_data.get("is_active") is False and user_to_update.id == current_user.id:
             raise AppException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Users cannot deactivate themselves.",

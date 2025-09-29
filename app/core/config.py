@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import PostgresDsn, computed_field
+from importlib import metadata
 
 class Settings(BaseSettings):
     """
@@ -7,6 +8,10 @@ class Settings(BaseSettings):
     """
     # --- Project Info ---
     PROJECT_NAME: str = "Gold Shop API"
+    try:
+        PROJECT_VERSION: str = metadata.version("gold-shop-backend")
+    except metadata.PackageNotFoundError:
+        PROJECT_VERSION: str = "1.1.0" # Fallback for local development
     API_V1_STR: str = "/api/v1"
 
     # --- Database Configuration ---

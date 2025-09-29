@@ -37,7 +37,7 @@ def create_transaction(
     current_user: User = Depends(deps.get_current_active_user),
 ):
     """Creates the initial transaction entry. Items are added separately."""
-    return transaction_service.create_transaction(db, transaction_in=transaction_in, current_user=current_user)
+    return transaction_service.create(db, transaction_in=transaction_in, current_user=current_user)
 
 @router.get(
     "/search", 
@@ -60,7 +60,7 @@ def search_transactions(
     limit: int = 100,
 ):
     """Admin can search all transactions. Regular users can only search their own."""
-    return transaction_service.search_transactions(
+    return transaction_service.search(
         db, current_user=current_user, recorder_id=recorder_id, contact_id=contact_id, status=status,
         start_time=start_time, end_time=end_time, item_title=item_title, item_id=item_id,
         item_transaction_type=item_transaction_type, skip=skip, limit=limit
@@ -87,7 +87,7 @@ def search_transactions_detailed(
     limit: int = 100,
 ):
     """Admin can search all transactions. Regular users can only search their own."""
-    return transaction_service.search_transactions(
+    return transaction_service.search(
         db, current_user=current_user, recorder_id=recorder_id, contact_id=contact_id, status=status,
         start_time=start_time, end_time=end_time, item_title=item_title, item_id=item_id,
         item_transaction_type=item_transaction_type, skip=skip, limit=limit
@@ -110,7 +110,7 @@ def get_transaction(
     current_user: User = Depends(deps.get_current_active_user),
 ):
     """Retrieves a specific transaction, checking for ownership if the user is not an admin."""
-    return transaction_service.get_transaction_by_id(db, transaction_id=transaction_id, current_user=current_user, with_items=True)
+    return transaction_service.get_by_id(db, transaction_id=transaction_id, current_user=current_user, with_items=True)
 
 @router.put(
     "/{transaction_id}",
@@ -131,7 +131,7 @@ def update_transaction(
     current_user: User = Depends(deps.get_current_active_user),
 ):
     """Allows modification only if the transaction status is 'draft'."""
-    return transaction_service.update_transaction(db, transaction_id=transaction_id, transaction_in=transaction_in, current_user=current_user)
+    return transaction_service.update(db, transaction_id=transaction_id, transaction_in=transaction_in, current_user=current_user)
 
 @router.delete(
     "/{transaction_id}", 
@@ -151,7 +151,7 @@ def delete_transaction(
     current_user: User = Depends(deps.get_current_active_user),
 ):
     """Performs a deletion only if the transaction status is 'draft'."""
-    transaction_service.delete_transaction(db, transaction_id=transaction_id, current_user=current_user)
+    transaction_service.delete(db, transaction_id=transaction_id, current_user=current_user)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 @router.post(
@@ -170,7 +170,7 @@ def approve_transaction(
     current_user: User = Depends(deps.get_current_active_user),
 ):
     """Handles the state transition for approving a transaction based on user role."""
-    return transaction_service.approve_transaction(db, transaction_id=transaction_id, current_user=current_user)
+    return transaction_service.approve(db, transaction_id=transaction_id, current_user=current_user)
 
 @router.post(
     "/{transaction_id}/reject", 
@@ -188,5 +188,5 @@ def reject_transaction(
     current_user: User = Depends(deps.get_current_active_user),
 ):
     """Handles the state transition for rejecting a transaction based on user role."""
-    return transaction_service.reject_transaction(db, transaction_id=transaction_id, current_user=current_user)
+    return transaction_service.reject(db, transaction_id=transaction_id, current_user=current_user)
 

@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import desc, func
 from typing import List, Optional, Any
 import uuid
+from datetime import datetime
 
 from app.repository.base import BaseRepository
 from app.models.payment import Payment
@@ -17,30 +18,28 @@ class PaymentRepository(BaseRepository[Payment, PaymentCreate, PaymentUpdate]):
         self,
         db: Session,
         *,
-        current_user: User,
+        # Filters
         payment_method: Optional[PaymentMethod] = None,
         direction: Optional[PaymentDirection] = None,
         status: Optional[ApprovalStatus] = None,
-        amount: Optional[int] = None,
         photo_holder_id: Optional[uuid.UUID] = None,
         investment_id: Optional[uuid.UUID] = None,
         transaction_id: Optional[uuid.UUID] = None,
         account_ledger_id: Optional[uuid.UUID] = None,
         saved_bank_account_id: Optional[uuid.UUID] = None,
         recorder_id: Optional[uuid.UUID] = None,
-        skip: int,
-        limit: int
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+        # Sorting
+        amount: Optional[int] = None,
+        # Pagination
+        skip: int = 0,
+        limit: int = 100
     ) -> List[Payment]:
         """
         Searches for payments based on a combination of criteria with advanced sorting.
         """
         query = db.query(self.model)
-
-        # Non-admins can only see payments they recorded.
-        if current_user.role != UserRole.ADMIN:
-            query = query.filter(Payment.recorder_id == current_user.id)
-        elif recorder_id: # Admins can filter by recorder
-            query = query.filter(Payment.recorder_id == recorder_id)
 
         # Apply filters
         if payment_method:
@@ -59,6 +58,12 @@ class PaymentRepository(BaseRepository[Payment, PaymentCreate, PaymentUpdate]):
             query = query.filter(Payment.account_ledger_id == account_ledger_id)
         if saved_bank_account_id:
             query = query.filter(Payment.saved_bank_account_id == saved_bank_account_id)
+        if recorder_id:
+            query = query.filter(self.model.recorder_id == recorder_id)
+        if start_time:
+            query = query.filter(self.model.created_at >= start_time)
+        if end_time:
+            query = query.filter(self.model.created_at <= end_time)
 
         # Conditional Sorting
         if amount is not None:

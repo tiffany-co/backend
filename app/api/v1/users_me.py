@@ -4,7 +4,7 @@ import uuid
 from typing import List
 
 from app.api import deps
-from app.schema.user import UserPublic, UserUpdate
+from app.schema.user import UserPublic, UserUpdateMe
 from app.schema.permission import PermissionPublic
 from app.schema.error import ErrorDetail
 from app.services.user import user_service
@@ -72,7 +72,6 @@ def read_current_user(
                         "username": "new_johndoe",
                         "full_name": "Johnathan Doe",
                         "phone_number": "0987654321",
-                        "is_active": True,
                         "role": "user",
                     }
                 }
@@ -105,7 +104,7 @@ def read_current_user(
 def update_current_user(
     *,
     db: Session = Depends(deps.get_db),
-    user_in: UserUpdate,
+    user_in: UserUpdateMe,
     current_user: User = Depends(deps.get_current_active_user)
 ):
     """
