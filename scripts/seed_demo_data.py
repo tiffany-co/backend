@@ -42,12 +42,13 @@ from seeding.data.demo_data import (
     DEMO_SAVED_BANK_ACCOUNTS,
     DEMO_INVENTORY,
     TRANSACTION_1_BUY_GOLD,
-    # TRANSACTION_2_SELL_GOLD,
-    # TRANSACTION_3_BUY_MORE_GOLD
+    TRANSACTION_2_SELL_GOLD,
+    TRANSACTION_3_BUY_MORE_GOLD
 )
 from app.schema.transaction import TransactionCreate
 from app.schema.transaction_item import TransactionItemCreate
 from app.schema.account_ledger import AccountLedgerCreate
+from app.schema.payment import PaymentCreate
 
 console = Console()
 
@@ -67,7 +68,7 @@ def seed_demo_data():
 
         # --- 2. Complex Scenarios ---
         _run_transaction_1(db)
-        # _run_transaction_2(db)
+        _run_transaction_2(db)
         # _run_transaction_3(db)
 
         console.print("\nDemo data seeding complete!", style="bold green")
@@ -122,7 +123,7 @@ def _run_transaction_1(db: Session):
     
     # --- Dependencies ---
     recorder = user_repo.get_by_username(db, username=TRANSACTION_1_BUY_GOLD["recorder_username"])
-    contact = contact_repo.get_by_national_number(db, national_number=TRANSACTION_1_BUY_GOLD["contact_national_id"])
+    contact = contact_repo.get_by_national_number(db, national_number=TRANSACTION_1_BUY_GOLD["contact_national_number"])
     
     # --- Check if transaction already exists ---
     if transaction_repo.get_by_note(db, note=TRANSACTION_1_BUY_GOLD["transaction"]["note"]):
@@ -160,103 +161,113 @@ def _run_transaction_1(db: Session):
     console.print(f"  - Scenario 1 complete for contact: '[bold green]{contact.last_name}[/bold green]'", style="green")
 
 
-# def _run_transaction_2(db: Session):
-#     console.print("\n[6/7] Running Transaction Scenario 2 (Sell Gold & Settle Debt)...", style="yellow")
+def _run_transaction_2(db: Session):
+    console.print("\n[6/7] Running Transaction Scenario 2 (Sell Gold & Settle Debt)...", style="yellow")
     
-#     # --- Dependencies ---
-#     recorder = user_repo.get_by_username(db, username=TRANSACTION_2_SELL_GOLD["recorder_username"])
-#     contact_rezai = contact_repo.get_by_national_id(db, national_id=TRANSACTION_2_SELL_GOLD["contact_national_id"])
-#     contact_ahmadi = contact_repo.get_by_national_id(db, national_id=TRANSACTION_2_SELL_GOLD["payments"][0]["payment"]["contact_id_from_national_id"])
-#     ledger_ahmadi = db.query(Account_Ledger).filter(Account_Ledger.contact_id == contact_ahmadi.id).first()
-#     bank_account = saved_bank_account_repo.get_by_name(db, name=TRANSACTION_2_SELL_GOLD["payments"][1]["payment"]["saved_bank_account_name"])
+    # --- Dependencies ---
+    recorder = user_repo.get_by_username(db, username=TRANSACTION_2_SELL_GOLD["recorder_username"])
+    contact_rezai = contact_repo.get_by_national_number(db, national_number=TRANSACTION_2_SELL_GOLD["contact_national_number"])
+    contact_ahmadi = contact_repo.get_by_national_number(db, national_number=TRANSACTION_2_SELL_GOLD["payments"][0]["contact_national_number"])
+    ledger_search_result = account_ledger_repo.search(db, contact_id=contact_ahmadi.id)
+    ledger_ahmadi = ledger_search_result[0] if 1 <= len(ledger_search_result) else None
+    bank_account = saved_bank_account_repo.get_by_name(db, name=TRANSACTION_2_SELL_GOLD["payments"][1]["saved_bank_account_name"])
 
-#     # --- Check if transaction already exists ---
-#     if transaction_repo.get_by_note(db, note=TRANSACTION_2_SELL_GOLD["transaction"].note):
-#         console.print("  - Transaction 2 already exists. Skipping scenario.", style="dim")
-#         return
+    # --- Check if transaction already exists ---
+    if transaction_repo.get_by_note(db, note=TRANSACTION_2_SELL_GOLD["transaction"]['note']):
+        console.print("  - Transaction 2 already exists. Skipping scenario.", style="dim")
+        return
 
-#     # --- Create Transaction and Items ---
-#     trans_create = TRANSACTION_2_SELL_GOLD["transaction"]
-#     trans_create.contact_id = contact_rezai.id
-#     new_transaction = transaction_service.create(db, transaction_in=trans_create, current_user=recorder)
+    # --- Create Transaction and Items ---
+    trans_create = TRANSACTION_2_SELL_GOLD["transaction"]
+    trans_create['contact_id'] = contact_rezai.id
+    trans_create_schema = TransactionCreate(**trans_create)
+    new_transaction = transaction_service.create(db, transaction_in=trans_create_schema, current_user=recorder)
 
-#     for item_data in TRANSACTION_2_SELL_GOLD["items"]:
-#         item_model = item_repo.get_by_name(db, name=item_data["item_name"])
-#         item_create_schema = TransactionItemCreate(**item_data)
-#         transaction_item_service.create(db, transaction_id=new_transaction.id, item_in=item_create_schema, current_user=recorder, item_model=item_model)
+    for item_data in TRANSACTION_2_SELL_GOLD["items"]:
+        item_model = item_repo.get_by_name(db, name=item_data["item_name"])
+        del item_data['item_name']
+        item_data['item_id'] = item_model.id
+        item_data['transaction_id'] = new_transaction.id
+        item_create_schema = TransactionItemCreate(**item_data)
+        transaction_item_service.create_item(db, item_in=item_create_schema, current_user=recorder)
 
-#     # --- Approve Transaction ---
-#     transaction_service.approve(db, transaction_id=new_transaction.id, current_user=recorder)
+    # --- Approve Transaction by Admin ---
+    transaction_service.approve(db, transaction_id=new_transaction.id, current_user=recorder)
 
-#     # --- Create and Approve Payments ---
-#     db.refresh(ledger_ahmadi)
-#     payment_internal_create = TRANSACTION_2_SELL_GOLD["payments"][0]["payment"]
-#     payment_internal_create["amount"] = abs(ledger_ahmadi.debt)
-#     payment_internal_create["account_ledger_id"] = ledger_ahmadi.id
-#     payment_internal_create.pop("contact_id_from_national_id") # Clean up temp field
-#     payment_internal = payment_service.create(db, payment_in=payment_internal_create, current_user=recorder)
-#     payment_service.approve(db, payment_id=payment_internal.id, current_user=recorder)
+    # --- Create and Approve Payments ---
+    db.refresh(ledger_ahmadi)
+    db.refresh(new_transaction)
+    payment_internal_create = TRANSACTION_2_SELL_GOLD["payments"][0]
+    payment_internal_create["amount"] = abs(new_transaction.total_price)
+    payment_internal_create["account_ledger_id"] = ledger_ahmadi.id
+    payment_internal_create.pop("contact_national_number") # Clean up temp field
+    Payment_create_schema = PaymentCreate(**payment_internal_create)
+    payment_internal = payment_service.create(db, payment_in=Payment_create_schema, current_user=recorder)
+    payment_service.approve(db, payment_id=payment_internal.id, current_user=recorder)
 
-#     db.refresh(new_transaction) # Get final price
-#     remaining_payment = abs(new_transaction.total_price) - payment_internal.amount
+    db.refresh(new_transaction) # Get final price
+    remaining_payment = ledger_ahmadi.debt - payment_internal.amount
     
-#     payment_outgoing_create = TRANSACTION_2_SELL_GOLD["payments"][1]["payment"]
-#     payment_outgoing_create["amount"] = remaining_payment
-#     payment_outgoing_create["contact_id"] = contact_rezai.id
-#     payment_outgoing_create["transaction_id"] = new_transaction.id
-#     payment_outgoing_create["saved_bank_account_id"] = bank_account.id
-#     payment_outgoing_create.pop("saved_bank_account_name")
-#     payment_outgoing = payment_service.create(db, payment_in=payment_outgoing_create, current_user=recorder)
-#     payment_service.approve(db, payment_id=payment_outgoing.id, current_user=recorder)
+    payment_outgoing_create = TRANSACTION_2_SELL_GOLD["payments"][1]
+    payment_outgoing_create["amount"] = remaining_payment
+    payment_outgoing_create["contact_id"] = contact_rezai.id
+    payment_outgoing_create["transaction_id"] = new_transaction.id
+    payment_outgoing_create["saved_bank_account_id"] = bank_account.id
+    payment_outgoing_create['account_ledger_id'] = ledger_ahmadi.id
+    payment_outgoing_create['contact_id'] = ledger_ahmadi.contact_id
+    payment_outgoing_create.pop("saved_bank_account_name")
+    payment_outgoing_schema = PaymentCreate(**payment_outgoing_create)
+    payment_outgoing = payment_service.create(db, payment_in=payment_outgoing_schema, current_user=recorder)
+    payment_service.approve(db, payment_id=payment_outgoing.id, current_user=recorder)
     
-#     console.print(f"  - Scenario 2 complete for contact: '[bold green]{contact_rezai.last_name}[/bold green]'", style="green")
+    console.print(f"  - Scenario 2 complete for contact: '[bold green]{contact_rezai.last_name}[/bold green]'", style="green")
 
 
-# def _run_transaction_3(db: Session):
-#     console.print("\n[7/7] Running Transaction Scenario 3 (Buy Gold with Partial Payment)...", style="yellow")
+def _run_transaction_3(db: Session):
+    console.print("\n[7/7] Running Transaction Scenario 3 (Buy Gold with Partial Payment)...", style="yellow")
     
-#     # --- Dependencies ---
-#     recorder = user_repo.get_by_username(db, username=TRANSACTION_3_BUY_MORE_GOLD["recorder_username"])
-#     contact = contact_repo.get_by_national_id(db, national_id=TRANSACTION_3_BUY_MORE_GOLD["contact_national_id"])
+    # --- Dependencies ---
+    recorder = user_repo.get_by_username(db, username=TRANSACTION_3_BUY_MORE_GOLD["recorder_username"])
+    contact = contact_repo.get_by_national_number(db, nationalget_by_national_number=TRANSACTION_3_BUY_MORE_GOLD["contact_nationalget_by_national_number"])
 
-#     # --- Check if transaction already exists ---
-#     if transaction_repo.get_by_note(db, note=TRANSACTION_3_BUY_MORE_GOLD["transaction"].note):
-#         console.print("  - Transaction 3 already exists. Skipping scenario.", style="dim")
-#         return
+    # --- Check if transaction already exists ---
+    if transaction_repo.get_by_note(db, note=TRANSACTION_3_BUY_MORE_GOLD["transaction"].note):
+        console.print("  - Transaction 3 already exists. Skipping scenario.", style="dim")
+        return
         
-#     # --- Create Transaction and Items ---
-#     trans_create = TRANSACTION_3_BUY_MORE_GOLD["transaction"]
-#     trans_create.contact_id = contact.id
-#     new_transaction = transaction_service.create(db, transaction_in=trans_create, current_user=recorder)
+    # --- Create Transaction and Items ---
+    trans_create = TRANSACTION_3_BUY_MORE_GOLD["transaction"]
+    trans_create.contact_id = contact.id
+    new_transaction = transaction_service.create(db, transaction_in=trans_create, current_user=recorder)
 
-#     for item_data in TRANSACTION_3_BUY_MORE_GOLD["items"]:
-#         item_model = item_repo.get_by_name(db, name=item_data["item_name"])
-#         item_create_schema = TransactionItemCreate(**item_data)
-#         transaction_item_service.create(db, transaction_id=new_transaction.id, item_in=item_create_schema, current_user=recorder, item_model=item_model)
+    for item_data in TRANSACTION_3_BUY_MORE_GOLD["items"]:
+        item_model = item_repo.get_by_name(db, name=item_data["item_name"])
+        item_create_schema = TransactionItemCreate(**item_data)
+        transaction_item_service.create(db, transaction_id=new_transaction.id, item_in=item_create_schema, current_user=recorder, item_model=item_model)
 
-#     # --- Approve Transaction ---
-#     admin_user = user_repo.get_by_username(db, username='admin')
-#     transaction_service.approve(db, transaction_id=new_transaction.id, current_user=recorder)
-#     transaction_service.approve(db, transaction_id=new_transaction.id, current_user=admin_user)
+    # --- Approve Transaction ---
+    admin_user = user_repo.get_by_username(db, username='admin')
+    transaction_service.approve(db, transaction_id=new_transaction.id, current_user=recorder)
+    transaction_service.approve(db, transaction_id=new_transaction.id, current_user=admin_user)
 
-#     # --- Create and Approve Payment ---
-#     payment_create = TRANSACTION_3_BUY_MORE_GOLD["payment"]["payment"]
-#     payment_create["contact_id"] = contact.id
-#     payment_create["transaction_id"] = new_transaction.id
-#     payment_partial = payment_service.create(db, payment_in=payment_create, current_user=recorder)
-#     payment_service.approve(db, payment_id=payment_partial.id, current_user=admin_user)
+    # --- Create and Approve Payment ---
+    payment_create = TRANSACTION_3_BUY_MORE_GOLD["payment"]["payment"]
+    payment_create["contact_id"] = contact.id
+    payment_create["transaction_id"] = new_transaction.id
+    payment_partial = payment_service.create(db, payment_in=payment_create, current_user=recorder)
+    payment_service.approve(db, payment_id=payment_partial.id, current_user=admin_user)
     
-#     # --- Create Ledger for Remaining Debt ---
-#     db.refresh(new_transaction)
-#     remaining_debt = new_transaction.total_price + payment_partial.amount # total_price is negative
+    # --- Create Ledger for Remaining Debt ---
+    db.refresh(new_transaction)
+    remaining_debt = new_transaction.total_price + payment_partial.amount # total_price is negative
     
-#     ledger_create = TRANSACTION_3_BUY_MORE_GOLD["ledger"]
-#     ledger_create.contact_id = contact.id
-#     ledger_create.transaction_id = new_transaction.id
-#     ledger_create.debt = remaining_debt
-#     account_ledger_service.create(db, ledger_in=ledger_create, current_user=recorder)
+    ledger_create = TRANSACTION_3_BUY_MORE_GOLD["ledger"]
+    ledger_create.contact_id = contact.id
+    ledger_create.transaction_id = new_transaction.id
+    ledger_create.debt = remaining_debt
+    account_ledger_service.create(db, ledger_in=ledger_create, current_user=recorder)
     
-#     console.print(f"  - Scenario 3 complete for contact: '[bold green]{contact.last_name}[/bold green]'", style="green")
+    console.print(f"  - Scenario 3 complete for contact: '[bold green]{contact.last_name}[/bold green]'", style="green")
 
 
 if __name__ == "__main__":
