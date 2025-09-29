@@ -27,23 +27,31 @@ class UserCreate(UserBase):
     password: str = Field(..., min_length=8, example="a_strong_password")
 
 # --- Schemas for Creating Admins (just used in create admin script) ---
-class AdminCreate(UserCreate):
+class AdminCreate(UserBase):
     """
     Schema specifically for the create_admin script.
     It inherits from UserCreate and adds the 'role' field, allowing an admin to be created.
     """
+    password: str = Field(..., example="a_strong_password", description="For convenience, we also included the ability to set a weak username for the admin.")
     role: UserRole = Field(..., example=UserRole.ADMIN)
 
 # --- Schemas for Updating Users ---
-class UserUpdate(BaseModel):
+class UserUpdateMe(BaseModel):
     """
-    Schema for updating an existing user. All fields are optional.
-    The 'role' is intentionally omitted to prevent it from being changed via this schema.
+    Schema for a user updating their own profile.
+    'is_active' is intentionally omitted to prevent users from deactivating themselves.
     """
     username: Optional[str] = Field(None, min_length=3, max_length=50, example="new_johndoe")
     full_name: Optional[str] = Field(None, min_length=3, max_length=100, example="Johnathan Doe")
     phone_number: Optional[str] = Field(None, min_length=10, max_length=15, example="0987654321")
     password: Optional[str] = Field(None, min_length=8, example="a_new_strong_password")
+
+class UserUpdateAdmin(UserUpdateMe):
+    """
+    Schema for an admin updating any user's profile.
+    Includes the ability to change the 'is_active' status.
+    """
+    password: Optional[str] = Field(None, min_length=4, example="a_new_strong_password")
     is_active: Optional[bool] = Field(None, example=True)
 
 # --- Schemas for Public Responses ---

@@ -4,7 +4,7 @@ import uuid
 from typing import List
 
 from app.api import deps
-from app.schema.user import UserCreate, UserPublic, UserUpdate, UserInList
+from app.schema.user import UserCreate, UserPublic, UserUpdateAdmin, UserInList
 from app.schema.permission import PermissionPublic, UserPermissionCreate
 from app.schema.error import ErrorDetail
 from app.services.user import user_service
@@ -179,7 +179,7 @@ def update_user_by_id(
     *,
     db: Session = Depends(deps.get_db),
     user_id: uuid.UUID,
-    user_in: UserUpdate,
+    user_in: UserUpdateAdmin,
     current_user: User = Depends(deps.get_current_active_user)
 ):
     """Admin endpoint to update a user's details."""

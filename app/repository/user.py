@@ -1,10 +1,10 @@
 from typing import Optional, Union
 from sqlalchemy.orm import Session
 from app.models.user import User
-from app.schema.user import UserCreate, UserUpdate, AdminCreate
+from app.schema.user import UserCreate, UserUpdateAdmin, UserUpdateMe, AdminCreate
 from .base import BaseRepository
 
-class UserRepository(BaseRepository[User, Union[UserCreate, AdminCreate], UserUpdate]):
+class UserRepository(BaseRepository[User, Union[UserCreate, AdminCreate], Union[UserUpdateMe, UserUpdateAdmin]]):
     """
     Repository for User model operations.
     Inherits from BaseRepository and adds user-specific query methods.

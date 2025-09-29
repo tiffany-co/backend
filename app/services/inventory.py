@@ -46,6 +46,8 @@ def _format_inventory(inventory: Inventory | None) -> Dict[str, Any]:
         "created_at": inventory.created_at,
         "updated_at": inventory.updated_at,
         "description": inventory.description,
+        "transaction_id": inventory.transaction_id,
+        "payment_id": inventory.payment_id,
         "money_balance": inventory.money_balance,
         "inventory": inventory_items,
     }

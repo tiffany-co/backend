@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from app.core.exceptions import AppException
 from fastapi import status
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.models.contact import Contact
 from app.models.enums.permission import PermissionName
 from app.models.enums.contact import ContactType
@@ -58,9 +58,10 @@ class ContactService:
         contact_to_update = self.get_contact_by_id(db, contact_id=contact_id)
         
         is_owner = contact_to_update.creator_user_id == current_user.id
+        is_admin = current_user.role == UserRole.ADMIN
         has_permission = any(p.name == PermissionName.CONTACT_UPDATE_ALL for p in current_user.permissions)
         
-        if not is_owner and not has_permission:
+        if not is_owner and not has_permission and not is_admin:
              raise AppException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You do not have permission to update this contact.",

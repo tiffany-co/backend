@@ -1,10 +1,9 @@
 from sqlalchemy.orm import Session
 import uuid
-from typing import List, Optional
+from typing import List, Any
 
 from app.core.exceptions import AppException
 from fastapi import status
-from app.models.user import User
 from app.models.account_ledger import AccountLedger
 from app.models.payment import Payment, PaymentDirection
 from app.repository.account_ledger import account_ledger_repo
@@ -22,19 +21,26 @@ class AccountLedgerService:
             raise AppException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Account ledger with ID {account_ledger_id} not found.")
         return ledger
 
-    def create(self, db: Session, *, ledger_in: AccountLedgerCreate, current_user: User) -> AccountLedger:
+    def search(self, db: Session, **kwargs: Any) -> List[AccountLedger]:
+        """
+        Handles business logic for searching ledger entries.
+        Forwards search criteria to the repository layer.
+        """
+        return account_ledger_repo.search(db=db, **kwargs)
+
+    def create(self, db: Session, *, ledger_in: AccountLedgerCreate) -> AccountLedger:
         """Handles business logic for creating a new ledger entry."""
         if not contact_repo.get(db, id=ledger_in.contact_id):
              raise AppException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Contact with ID {ledger_in.contact_id} not found.")
         
         return account_ledger_repo.create(db, obj_in=ledger_in)
 
-    def update(self, db: Session, *, ledger_id: uuid.UUID, ledger_in: AccountLedgerUpdate, current_user: User) -> AccountLedger:
+    def update(self, db: Session, *, ledger_id: uuid.UUID, ledger_in: AccountLedgerUpdate) -> AccountLedger:
         """Handles business logic for updating a ledger entry."""
         ledger = self.get_by_id(db, account_ledger_id=ledger_id)
         return account_ledger_repo.update(db, db_obj=ledger, obj_in=ledger_in)
 
-    def delete(self, db: Session, *, ledger_id: uuid.UUID, current_user: User) -> AccountLedger:
+    def delete(self, db: Session, *, ledger_id: uuid.UUID) -> AccountLedger:
         """Handles business logic for deleting a ledger entry."""
         return account_ledger_repo.remove(db, id=ledger_id)
 

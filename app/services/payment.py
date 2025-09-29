@@ -9,8 +9,15 @@ from app.models.payment import Payment, PaymentDirection
 from app.models.enums.shared import ApprovalStatus
 from app.repository.payment import payment_repo
 from app.schema.payment import PaymentCreate, PaymentUpdate
-from app.services.inventory import inventory_service
+
+# --- Services for FK validation and business logic ---
 from app.services.account_ledger import account_ledger_service
+from app.services.inventory import inventory_service
+from app.services.user import user_service
+from app.services.contact import contact_service
+from app.services.transaction import transaction_service
+from app.services.investment import investment_service
+from app.services.saved_bank_account import saved_bank_account_service
 
 class PaymentService:
     """Service layer for payment-related business logic."""
@@ -37,11 +44,28 @@ class PaymentService:
         **kwargs: Any
     ) -> List[Payment]:
         """Orchestrates the search for payments by calling the repository."""
-        return payment_repo.search(
-            db,
-            current_user=current_user,
-            **kwargs
-        )
+        # If the user is not an admin, force the search to only include their own payments
+        if current_user.role != UserRole.ADMIN:
+            kwargs["recorder_id"] = current_user.id
+        
+        return payment_repo.search(db, **kwargs)
+
+    def _validate_foreign_keys(self, db: Session, payment_in: PaymentCreate, current_user: User):
+        """
+        Helper to check existence of all provided foreign key IDs by calling their respective services.
+        This reuses the not-found logic defined in each service.
+        """
+        if payment_in.photo_holder_id:
+            user_service.get_user_by_id(db, user_id=payment_in.photo_holder_id)
+        if payment_in.contact_id:
+            contact_service.get_contact_by_id(db, contact_id=payment_in.contact_id)
+        if payment_in.transaction_id:
+            transaction_service.get_by_id(db, transaction_id=payment_in.transaction_id, current_user=current_user)
+        if payment_in.investment_id:
+            investment_service.get_by_id(db, investment_id=payment_in.investment_id)
+        if payment_in.saved_bank_account_id:
+            saved_bank_account_service.get_by_id(db, account_id=payment_in.saved_bank_account_id)
+        # account_ledger_id's existence is checked during business logic validation
 
     def create(self, db: Session, *, payment_in: PaymentCreate, current_user: User) -> Payment:
         """Handles business logic for creating a new payment."""
@@ -56,6 +80,9 @@ class PaymentService:
             if payment_in.amount > ledger.debt and payment_in.direction != PaymentDirection.INCOMING:
                 raise AppException(status_code=status.HTTP_400_BAD_REQUEST, detail="Payment amount cannot be greater than the outstanding debt.")
 
+        # --- Foreign Key Existence Validation ---
+        self._validate_foreign_keys(db, payment_in, current_user)
+        
         return payment_repo.create(db, obj_in=payment_data)
 
     def update(self, db: Session, *, payment_id: uuid.UUID, payment_in: PaymentUpdate, current_user: User) -> Payment:

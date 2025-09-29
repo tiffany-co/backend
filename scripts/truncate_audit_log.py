@@ -20,9 +20,13 @@ def truncate_audit_log_table():
     """
     console.print("\n--- Audit Log Truncate Utility ---", style="bold yellow")
     
-    confirm = console.input(
-        "[bold red]WARNING: This will permanently delete all audit log data. Are you sure? (yes/no): [/bold red]"
-    )
+    if '--yes' in sys.argv:
+        confirm = 'yes'
+    else:
+        confirm = console.input(
+            "[bold red]WARNING: This will permanently delete all audit log data. Are you sure? (yes/no): [/bold red]"
+        )
+        
     if confirm.lower() != "yes":
         console.print("Operation cancelled.", style="green")
         return

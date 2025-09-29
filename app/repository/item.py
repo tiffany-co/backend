@@ -35,8 +35,8 @@ class ItemRepository(BaseRepository[Item, ItemCreate, ItemUpdate]):
             query = query.filter(self.model.category.ilike(f"%{category}%"))
         if measurement_type:
             query = query.filter(self.model.measurement_type == measurement_type)
-        if is_active:
-            query = query.filter(self.model.is_active == is_active)  
+        if is_active is not None:
+            query = query.filter(self.model.is_active == is_active)
             
         return query.offset(skip).limit(limit).all()
 
