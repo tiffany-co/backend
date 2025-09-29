@@ -87,6 +87,10 @@ class TransactionItemService:
         return deleted_item
 
     def _calculate_item_total_price(self, item: TransactionItem, transaction_type: TransactionType) -> int:
+        """
+        BUY: When we want to buy something, tax, profit, and labor (ojrat) are currently calculated as zero
+        SELL: Calculation according to the formula given in Excel (simplified)
+        """
         unit_price = Decimal(item.unit_price) # مظنه
         weight_count = Decimal(item.weight_count) # وزن / تعداد
         ojrat = Decimal(item.ojrat or 0) / 100 # اجرت
@@ -97,7 +101,7 @@ class TransactionItemService:
         price_after_wage = unit_price + wage_per_unit # قیمت هر واحد بعد از اجرت
         profit_per_unit = price_after_wage * profit # سود به ازای هر واحد (گرم/تعداد)
         price_after_profit = price_after_wage + profit_per_unit # قیمت بعد از سود به ازای هر واحد
-
+        
         net_price = unit_price * weight_count # قیمت خالص
         gross_price = price_after_profit * weight_count # قیمت ناخالص
         
@@ -105,9 +109,6 @@ class TransactionItemService:
         
         total_price = gross_price + tax_amount
         
-        if transaction_type == TransactionType.BUY: # We have to pay here!
-            total_price *= -1
-            
         return int(total_price)
 
 transaction_item_service = TransactionItemService()

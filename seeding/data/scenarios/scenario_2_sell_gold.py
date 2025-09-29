@@ -17,8 +17,9 @@ SCENARIO_2_SELL_GOLD = {
             "transaction_type": TransactionType.SELL,
             "weight_count": 2,
             "unit_price": 350_000_000,
-            "profit_default": 2.0,
-            "tax_default": 9.0,
+            "profit": 2.0,
+            "ojrat": 1.0,
+            "tax": 9.0,
         }
     ],
     "payments": [
