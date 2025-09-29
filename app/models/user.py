@@ -26,6 +26,7 @@ class User(BaseModel):
     username = Column(String, unique=True, index=True, nullable=False)
     phone_number = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
+    hashed_refresh_token = Column(String, nullable=True)
     role = Column(Enum(UserRole), nullable=False, default=UserRole.USER)
     is_active = Column(Boolean, default=True)
     

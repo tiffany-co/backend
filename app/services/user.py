@@ -8,7 +8,7 @@ from app.models.user import User
 from app.models.enums.user import UserRole
 from app.repository.user import user_repo
 from app.schema.user import UserCreate, UserUpdateAdmin, UserUpdateMe, AdminCreate
-from app.core.security import get_password_hash
+from app.core.security import get_hashed_value
 
 class UserService:
     """
@@ -56,7 +56,7 @@ class UserService:
             )
 
         user_data_for_db = user_in.model_dump()
-        user_data_for_db["hashed_password"] = get_password_hash(user_in.password)
+        user_data_for_db["hashed_password"] = get_hashed_value(user_in.password)
         del user_data_for_db["password"]
         
         if "role" not in user_data_for_db:
@@ -102,7 +102,7 @@ class UserService:
         
         update_data = user_in.model_dump(exclude_unset=True)
         if "password" in update_data and update_data["password"]:
-            update_data["hashed_password"] = get_password_hash(update_data["password"])
+            update_data["hashed_password"] = (update_data["password"])
             del update_data["password"]
 
         updated_user = user_repo.update(db, db_obj=user_to_update, obj_in=update_data)

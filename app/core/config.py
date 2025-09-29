@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     try:
         PROJECT_VERSION: str = metadata.version("gold-shop-backend")
     except metadata.PackageNotFoundError:
-        PROJECT_VERSION: str = "1.1.0" # Fallback for local development
+        PROJECT_VERSION: str = "1.2.0" # Fallback for local development
     API_V1_STR: str = "/api/v1"
 
     # --- Database Configuration ---
@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     # --- JWT Settings ---
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_SECRET_KEY: str
+    REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
     ALGORITHM: str = "HS256"
 
     # --- Pydantic Model Config ---
