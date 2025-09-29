@@ -42,7 +42,21 @@ class PaymentService:
             kwargs["recorder_id"] = current_user.id
         
         return payment_repo.search(db, **kwargs)
-    
+
+    def _validate_foreign_keys(self, db: Session, payment_in: PaymentCreate):
+        """Helper to check existence of all provided foreign key IDs."""
+        if payment_in.photo_holder_id and not user_repo.get(db, id=payment_in.photo_holder_id):
+            raise AppException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Photo holder user with ID {payment_in.photo_holder_id} not found.")
+        if payment_in.contact_id and not contact_repo.get(db, id=payment_in.contact_id):
+            raise AppException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Contact with ID {payment_in.contact_id} not found.")
+        if payment_in.transaction_id and not transaction_repo.get(db, id=payment_in.transaction_id):
+            raise AppException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Transaction with ID {payment_in.transaction_id} not found.")
+        if payment_in.investment_id and not investment_repo.get(db, id=payment_in.investment_id):
+            raise AppException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Investment with ID {payment_in.investment_id} not found.")
+        if payment_in.saved_bank_account_id and not saved_bank_account_repo.get(db, id=payment_in.saved_bank_account_id):
+            raise AppException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Saved bank account with ID {payment_in.saved_bank_account_id} not found.")
+        # account_ledger_id's existence is checked during business logic validation
+
     def create(self, db: Session, *, payment_in: PaymentCreate, current_user: User) -> Payment:
         """Handles business logic for creating a new payment."""
         payment_data = payment_in.model_dump()
@@ -56,6 +70,9 @@ class PaymentService:
             if payment_in.amount > ledger.debt and payment_in.direction != PaymentDirection.INCOMING:
                 raise AppException(status_code=status.HTTP_400_BAD_REQUEST, detail="Payment amount cannot be greater than the outstanding debt.")
 
+        # --- Foreign Key Existence Validation ---
+        self._validate_foreign_keys(db, payment_in)
+        
         return payment_repo.create(db, obj_in=payment_data)
 
     def update(self, db: Session, *, payment_id: uuid.UUID, payment_in: PaymentUpdate, current_user: User) -> Payment:
