@@ -69,7 +69,7 @@ def seed_demo_data():
         # --- 2. Complex Scenarios ---
         _run_transaction_1(db)
         _run_transaction_2(db)
-        # _run_transaction_3(db)
+        _run_transaction_3(db)
 
         console.print("\nDemo data seeding complete!", style="bold green")
 
@@ -228,22 +228,25 @@ def _run_transaction_3(db: Session):
     
     # --- Dependencies ---
     recorder = user_repo.get_by_username(db, username=TRANSACTION_3_BUY_MORE_GOLD["recorder_username"])
-    contact = contact_repo.get_by_national_number(db, nationalget_by_national_number=TRANSACTION_3_BUY_MORE_GOLD["contact_nationalget_by_national_number"])
+    contact = contact_repo.get_by_national_number(db, national_number=TRANSACTION_3_BUY_MORE_GOLD["contact_national_id"])
 
     # --- Check if transaction already exists ---
-    if transaction_repo.get_by_note(db, note=TRANSACTION_3_BUY_MORE_GOLD["transaction"].note):
+    if transaction_repo.get_by_note(db, note=TRANSACTION_3_BUY_MORE_GOLD["transaction"]["note"]):
         console.print("  - Transaction 3 already exists. Skipping scenario.", style="dim")
         return
         
     # --- Create Transaction and Items ---
     trans_create = TRANSACTION_3_BUY_MORE_GOLD["transaction"]
-    trans_create.contact_id = contact.id
-    new_transaction = transaction_service.create(db, transaction_in=trans_create, current_user=recorder)
+    trans_create["contact_id"] = contact.id
+    trans_create_schema = TransactionCreate(**trans_create)
+    new_transaction = transaction_service.create(db, transaction_in=trans_create_schema, current_user=recorder)
 
     for item_data in TRANSACTION_3_BUY_MORE_GOLD["items"]:
         item_model = item_repo.get_by_name(db, name=item_data["item_name"])
+        item_data["item_id"] = item_model.id
+        item_data["transaction_id"] = new_transaction.id
         item_create_schema = TransactionItemCreate(**item_data)
-        transaction_item_service.create(db, transaction_id=new_transaction.id, item_in=item_create_schema, current_user=recorder, item_model=item_model)
+        transaction_item_service.create_item(db, item_in=item_create_schema, current_user=recorder)
 
     # --- Approve Transaction ---
     admin_user = user_repo.get_by_username(db, username='admin')
@@ -251,24 +254,25 @@ def _run_transaction_3(db: Session):
     transaction_service.approve(db, transaction_id=new_transaction.id, current_user=admin_user)
 
     # --- Create and Approve Payment ---
-    payment_create = TRANSACTION_3_BUY_MORE_GOLD["payment"]["payment"]
+    payment_create = TRANSACTION_3_BUY_MORE_GOLD["payment"]
     payment_create["contact_id"] = contact.id
     payment_create["transaction_id"] = new_transaction.id
-    payment_partial = payment_service.create(db, payment_in=payment_create, current_user=recorder)
+    payment_create_schema = PaymentCreate(**payment_create)
+    payment_partial = payment_service.create(db, payment_in=payment_create_schema, current_user=recorder)
     payment_service.approve(db, payment_id=payment_partial.id, current_user=admin_user)
     
     # --- Create Ledger for Remaining Debt ---
     db.refresh(new_transaction)
-    remaining_debt = new_transaction.total_price + payment_partial.amount # total_price is negative
+    remaining_debt = abs(new_transaction.total_price) - payment_partial.amount # total_price is negative
     
     ledger_create = TRANSACTION_3_BUY_MORE_GOLD["ledger"]
-    ledger_create.contact_id = contact.id
-    ledger_create.transaction_id = new_transaction.id
-    ledger_create.debt = remaining_debt
-    account_ledger_service.create(db, ledger_in=ledger_create, current_user=recorder)
+    ledger_create["contact_id"] = contact.id
+    ledger_create["transaction_id"] = new_transaction.id
+    ledger_create["debt"] = remaining_debt
+    ledger_create_schema = AccountLedgerCreate(**ledger_create)
+    account_ledger_service.create(db, ledger_in=ledger_create_schema)
     
     console.print(f"  - Scenario 3 complete for contact: '[bold green]{contact.last_name}[/bold green]'", style="green")
-
 
 if __name__ == "__main__":
     env_path = root_dir.parent / ".env"

@@ -153,7 +153,6 @@ TRANSACTION_3_BUY_MORE_GOLD = {
             "transaction_type": TransactionType.BUY,
             "weight_count": 10,
             "unit_price": 40_000_000,
-            "profit": 1.0,
         }
     ],
     "ledger": {
