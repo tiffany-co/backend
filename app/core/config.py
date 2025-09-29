@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     try:
         PROJECT_VERSION: str = metadata.version("gold-shop-backend")
     except metadata.PackageNotFoundError:
-        PROJECT_VERSION: str = "1.1.0" # Fallback for local development
+        PROJECT_VERSION: str = "1.2.0" # Fallback for local development
     API_V1_STR: str = "/api/v1"
 
     # --- Database Configuration ---
