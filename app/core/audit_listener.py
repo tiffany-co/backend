@@ -1,7 +1,4 @@
 import json
-import uuid
-from datetime import datetime
-from decimal import Decimal
 
 from sqlalchemy import event, inspect
 from sqlalchemy.orm import Session, object_session
@@ -9,18 +6,7 @@ from sqlalchemy.orm.attributes import get_history
 
 from app.models.audit_log import AuditLog
 from app.models.enums.audit_log import OperationType
-
-def json_serializer(obj):
-    """Custom JSON serializer for objects not serializable by default json code"""
-    if isinstance(obj, (datetime)):
-        return obj.isoformat()
-    if isinstance(obj, uuid.UUID):
-        return str(obj)
-    if isinstance(obj, Decimal):
-        return str(obj)
-    if hasattr(obj, '__str__'):
-        return str(obj)
-    raise TypeError(f"Type {type(obj)} not serializable")
+from app.core.utils import json_serializer
 
 def get_obj_state(obj):
     """Converts a SQLAlchemy model instance into a JSON-serializable dictionary."""

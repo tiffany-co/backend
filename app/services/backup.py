@@ -1,7 +1,4 @@
 import json
-import uuid
-from datetime import datetime
-from decimal import Decimal
 from sqlalchemy.orm import Session
 from sqlalchemy import inspect, text
 
@@ -9,6 +6,7 @@ from app.db.base import Base
 from app.models.audit_log import AuditLog
 from app.core.exceptions import AppException
 from fastapi import status
+from app.core.utils import json_serializer
 
 # Define the order for data insertion to respect foreign key constraints.
 # Parent tables must come before child tables.
@@ -27,18 +25,6 @@ TABLE_ORDER = [
     "account_ledger",
     "payment",
 ]
-
-def _json_default_serializer(obj):
-    """Custom JSON serializer for objects not serializable by default."""
-    if isinstance(obj, (datetime)):
-        return obj.isoformat()
-    if isinstance(obj, uuid.UUID):
-        return str(obj)
-    if isinstance(obj, Decimal):
-        return str(obj)
-    if hasattr(obj, 'value'): # For Enums
-        return obj.value
-    raise TypeError(f"Type {type(obj)} not serializable")
 
 class BackupService:
     """Service layer for handling database backup and restore operations."""
@@ -65,7 +51,7 @@ class BackupService:
                     for row in records
                 ]
         
-        return json.dumps(backup_data, indent=4, default=_json_default_serializer)
+        return json.dumps(backup_data, indent=4, default=json_serializer)
 
     def import_data_from_json_str(self, db: Session, json_str: str):
         """
