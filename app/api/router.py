@@ -14,7 +14,8 @@ from app.api.v1 import (
     transactions,
     transaction_items,
     account_ledgers,
-    payments
+    payments,
+    backup
 )
 
 # --- Main API Router ---
@@ -24,6 +25,7 @@ api_router = APIRouter()
 # --- Core & System Endpoints ---
 api_router.include_router(health.router, prefix="", tags=["Health Check"])
 api_router.include_router(audit_logs.router, prefix="/audit-logs", tags=["Audit Logs"])
+api_router.include_router(backup.router, prefix="/backup", tags=["Database Backup"])
 
 # --- User & Authentication Endpoints ---
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
