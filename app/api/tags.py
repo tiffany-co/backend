@@ -16,4 +16,5 @@ tags_metadata = [
     {"name": "Account Ledgers", "description": "Endpoints for tracking debts and credits with contacts."},
     {"name": "Payments", "description": "Endpoints for recording and managing financial payments."},
     {"name": "Audit Logs", "description": "[Admin Only] Endpoints for viewing the database audit trail."},
+    {"name": "Database Backup", "description": "[Admin Only] Endpoints for exporting and importing database backups."},
 ]
