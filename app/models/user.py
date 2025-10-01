@@ -22,9 +22,9 @@ class User(BaseModel):
     """
     __tablename__ = "user"
 
-    full_name = Column(String, nullable=False)
+    full_name = Column(String, nullable=True)
     username = Column(String, unique=True, index=True, nullable=False)
-    phone_number = Column(String, unique=True, index=True, nullable=False)
+    phone_number = Column(String, unique=True, index=True, nullable=True)
     hashed_password = Column(String, nullable=False)
     hashed_refresh_token = Column(String, nullable=True)
     role = Column(Enum(UserRole), nullable=False, default=UserRole.USER)
