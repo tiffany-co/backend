@@ -16,7 +16,7 @@ class PaymentBase(BaseModel):
     photo_holder_id: Optional[uuid.UUID] = Field(None, description="ID of the user holding the receipt photo.")
 
     # Linkages
-    investment_id: Optional[uuid.UUID] = None
+    investor_id: Optional[uuid.UUID] = None
     transaction_id: Optional[uuid.UUID] = None
     account_ledger_id: Optional[uuid.UUID] = None
     saved_bank_account_id: Optional[uuid.UUID] = None
@@ -35,16 +35,16 @@ class PaymentCreate(PaymentBase):
             return data
 
         direction = data.get("direction")
+        investor_id = data.get("investor_id")
+        transaction_id = data.get("transaction_id")
+
+        if investor_id and transaction_id:
+            raise ValueError("A payment can be linked to an investor or a transaction, but not both.")
 
         if direction == PaymentDirection.INCOMING:
             if data.get("account_ledger_id"):
                 raise ValueError("Incoming payments cannot be linked to an account ledger.")
         
-        # --- I commented this part because the saved bank account may play the role of a source of money here. ---
-        # elif direction == PaymentDirection.OUTGOING:
-        #     if data.get("account_ledger_id") and data.get("saved_bank_account_id"):
-        #         raise ValueError("An outgoing payment can be linked to either an account ledger or a saved bank account, not both.")
-
         elif direction == PaymentDirection.INTERNAL_TRANSFER:
             if not data.get("account_ledger_id"):
                 raise ValueError("Internal transfers must be linked to an account ledger.")

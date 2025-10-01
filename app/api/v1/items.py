@@ -24,7 +24,7 @@ router = APIRouter()
 )
 def read_all_items(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=200),
 ):
@@ -42,7 +42,7 @@ def read_all_items(
 )
 def read_all_items_with_profiles(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
 ):
     return item_service.get_all(db, limit=1000)
 
@@ -58,7 +58,7 @@ def read_all_items_with_profiles(
 )
 def search_contacts(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
     name_fa: Optional[str] = Query(None, description="Search by persian name (case-insensitive, partial match)."),
     category: Optional[str] = Query(None, description="Search by category (case-insensitive, partial match)."),
     measurement_type: Optional[MeasurementType] = Query(None, description="Filter by measurement type [COUNTABLE/UNCOUNTABLE]."),
@@ -91,7 +91,7 @@ def search_contacts(
 def read_item_by_id(
     item_id: uuid.UUID,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
 ):
     return item_service.get_by_id(db, item_id=item_id)
 

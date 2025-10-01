@@ -22,9 +22,9 @@ class User(BaseModel):
     """
     __tablename__ = "user"
 
-    full_name = Column(String, nullable=False)
+    full_name = Column(String, nullable=True)
     username = Column(String, unique=True, index=True, nullable=False)
-    phone_number = Column(String, unique=True, index=True, nullable=False)
+    phone_number = Column(String, unique=True, index=True, nullable=True)
     hashed_password = Column(String, nullable=False)
     hashed_refresh_token = Column(String, nullable=True)
     role = Column(Enum(UserRole), nullable=False, default=UserRole.USER)
@@ -32,6 +32,7 @@ class User(BaseModel):
     
     # Bidirectional relationship with Contact
     contacts = relationship("Contact", back_populates="creator", cascade="all, delete-orphan")
+    investor_profile = relationship("Investor", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
     # Many-to-Many relationship with Permission
     permissions = relationship(

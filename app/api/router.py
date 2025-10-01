@@ -15,7 +15,10 @@ from app.api.v1 import (
     transaction_items,
     account_ledgers,
     payments,
-    backup
+    backup,
+    investors_admin,
+    investors_me,
+    investments
 )
 
 # --- Main API Router ---
@@ -54,3 +57,7 @@ api_router.include_router(transaction_items.router, prefix="/transaction-items",
 api_router.include_router(account_ledgers.router, prefix="/account-ledgers", tags=["Account Ledgers"])
 api_router.include_router(payments.router, prefix="/payments", tags=["Payments"])
 
+# --- Investor Endpoints ---
+api_router.include_router(investors_me.router, prefix="/investors", tags=["Investors - Me"]) # it should be before investor-admin
+api_router.include_router(investors_admin.router, prefix="/investors", tags=["Investors - Admin"])
+api_router.include_router(investments.router, prefix="/investments", tags=["Investments"])

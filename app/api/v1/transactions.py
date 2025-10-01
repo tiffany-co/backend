@@ -34,7 +34,7 @@ router = APIRouter()
 def create_transaction(
     transaction_in: TransactionCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
 ):
     """Creates the initial transaction entry. Items are added separately."""
     return transaction_service.create(db, transaction_in=transaction_in, current_user=current_user)
@@ -47,7 +47,7 @@ def create_transaction(
 )
 def search_transactions(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
     recorder_id: Optional[uuid.UUID] = Query(None, description="Filter by the user who recorded the transaction."),
     contact_id: Optional[uuid.UUID] = Query(None, description="Filter by the contact associated with the transaction."),
     status: Optional[ApprovalStatus] = Query(None, description="Filter by transaction status."),
@@ -74,7 +74,7 @@ def search_transactions(
 )
 def search_transactions_detailed(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
     recorder_id: Optional[uuid.UUID] = Query(None, description="Filter by the user who recorded the transaction."),
     contact_id: Optional[uuid.UUID] = Query(None, description="Filter by the contact associated with the transaction."),
     status: Optional[ApprovalStatus] = Query(None, description="Filter by transaction status."),
@@ -107,7 +107,7 @@ def search_transactions_detailed(
 def get_transaction(
     transaction_id: uuid.UUID,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
 ):
     """Retrieves a specific transaction, checking for ownership if the user is not an admin."""
     return transaction_service.get_by_id(db, transaction_id=transaction_id, current_user=current_user, with_items=True)
@@ -128,7 +128,7 @@ def update_transaction(
     transaction_id: uuid.UUID,
     transaction_in: TransactionUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
 ):
     """Allows modification only if the transaction status is 'draft'."""
     return transaction_service.update(db, transaction_id=transaction_id, transaction_in=transaction_in, current_user=current_user)
@@ -148,7 +148,7 @@ def update_transaction(
 def delete_transaction(
     transaction_id: uuid.UUID,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
 ):
     """Performs a deletion only if the transaction status is 'draft'."""
     transaction_service.delete(db, transaction_id=transaction_id, current_user=current_user)
@@ -167,7 +167,7 @@ def delete_transaction(
 def approve_transaction(
     transaction_id: uuid.UUID,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
 ):
     """Handles the state transition for approving a transaction based on user role."""
     return transaction_service.approve(db, transaction_id=transaction_id, current_user=current_user)
@@ -185,7 +185,7 @@ def approve_transaction(
 def reject_transaction(
     transaction_id: uuid.UUID,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
 ):
     """Handles the state transition for rejecting a transaction based on user role."""
     return transaction_service.reject(db, transaction_id=transaction_id, current_user=current_user)

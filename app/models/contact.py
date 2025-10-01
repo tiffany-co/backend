@@ -25,6 +25,7 @@ class Contact(BaseModel):
     transactions = relationship("Transaction", back_populates="contact")
     account_ledgers = relationship("AccountLedger", back_populates="contact", cascade="all, delete-orphan")
     payments = relationship("Payment", back_populates="contact")
+    investor_profile = relationship("Investor", back_populates="contact", uselist=False, cascade="all, delete-orphan")
 
     def __repr__(self):
         """

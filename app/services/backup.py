@@ -13,17 +13,18 @@ from app.core.utils import json_serializer
 TABLE_ORDER = [
     "user",
     "permission",
+    "item",
+    "saved_bank_account",
     "user_permission",
     "contact",
-    "item",
     "item_financial_profile",
-    "saved_bank_account",
+    "investor",
     "transaction",
     "transaction_item",
-    "inventory",
-    "investment",
     "account_ledger",
     "payment",
+    "investment",
+    "inventory",
 ]
 
 class BackupService:

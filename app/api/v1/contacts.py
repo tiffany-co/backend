@@ -29,7 +29,7 @@ router = APIRouter()
 def create_contact(
     contact_in: ContactCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
 ):
     """Endpoint to create a new contact, assigned to the current user."""
     return contact_service.create_contact(db=db, contact_in=contact_in, current_user=current_user)
@@ -47,7 +47,7 @@ def create_contact(
 )
 def read_all_contacts(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
     skip: int = Query(0, ge=0, description="Number of records to skip."),
     limit: int = Query(100, ge=1, le=200, description="Number of records to return."),
 ):
@@ -67,7 +67,7 @@ def read_all_contacts(
 )
 def search_contacts(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
     first_name: Optional[str] = Query(None, description="Search by first name (case-insensitive, partial match)."),
     last_name: Optional[str] = Query(None, description="Search by last name (case-insensitive, partial match)."),
     national_number: Optional[str] = Query(None, description="Search by exact national number."),
@@ -105,7 +105,7 @@ def search_contacts(
 def read_contact_by_id(
     contact_id: uuid.UUID,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
 ):
     """Endpoint to get a specific contact by its ID."""
     return contact_service.get_contact_by_id(db, contact_id=contact_id)
@@ -133,7 +133,7 @@ def update_contact(
     contact_id: uuid.UUID,
     contact_in: ContactUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
 ):
     """Endpoint to update a contact's details with permission checks."""
     return contact_service.update_contact(db=db, contact_id=contact_id, contact_in=contact_in, current_user=current_user)

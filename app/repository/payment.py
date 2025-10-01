@@ -14,6 +14,10 @@ from app.schema.payment import PaymentCreate, PaymentUpdate
 class PaymentRepository(BaseRepository[Payment, PaymentCreate, PaymentUpdate]):
     """Repository for payment-related database operations."""
 
+    def get_by_description(self, db: Session, *, description: str) -> Optional[Payment]:
+        """Gets the first payment found with a matching description."""
+        return db.query(self.model).filter(self.model.description == description).first()
+
     def search(
         self,
         db: Session,
@@ -23,7 +27,7 @@ class PaymentRepository(BaseRepository[Payment, PaymentCreate, PaymentUpdate]):
         direction: Optional[PaymentDirection] = None,
         status: Optional[ApprovalStatus] = None,
         photo_holder_id: Optional[uuid.UUID] = None,
-        investment_id: Optional[uuid.UUID] = None,
+        investor_id: Optional[uuid.UUID] = None,
         transaction_id: Optional[uuid.UUID] = None,
         account_ledger_id: Optional[uuid.UUID] = None,
         saved_bank_account_id: Optional[uuid.UUID] = None,
@@ -50,8 +54,8 @@ class PaymentRepository(BaseRepository[Payment, PaymentCreate, PaymentUpdate]):
             query = query.filter(Payment.status == status)
         if photo_holder_id:
             query = query.filter(Payment.photo_holder_id == photo_holder_id)
-        if investment_id:
-            query = query.filter(Payment.investment_id == investment_id)
+        if investor_id:
+            query = query.filter(Payment.investor_id == investor_id)
         if transaction_id:
             query = query.filter(Payment.transaction_id == transaction_id)
         if account_ledger_id:

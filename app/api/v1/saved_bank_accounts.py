@@ -48,7 +48,7 @@ def create_saved_bank_account(
 )
 def read_all_saved_bank_accounts(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=200),
 ):
@@ -69,7 +69,7 @@ def read_all_saved_bank_accounts(
 def read_saved_bank_account_by_id(
     account_id: uuid.UUID,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
 ):
     return saved_bank_account_service.get_by_id(db, account_id=account_id)
 
