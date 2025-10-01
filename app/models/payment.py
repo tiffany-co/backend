@@ -1,4 +1,4 @@
-from sqlalchemy import Column, BigInteger, String, ForeignKey, Enum, Text
+from sqlalchemy import Column, BigInteger, ForeignKey, Enum, Text
 from sqlalchemy.orm import relationship
 
 from app.models.base import BaseModel
@@ -20,7 +20,7 @@ class Payment(BaseModel):
     status = Column(Enum(ApprovalStatus, native_enum=False), nullable=False, default=ApprovalStatus.DRAFT, index=True)
 
     # --- Mutually Exclusive Foreign Keys ---
-    investment_id = Column(ForeignKey("investment.id", ondelete="SET NULL"), nullable=True, index=True)
+    investor_id = Column(ForeignKey("investor.id", ondelete="SET NULL"), nullable=True, index=True)
     transaction_id = Column(ForeignKey("transaction.id", ondelete="SET NULL"), nullable=True, index=True)
     account_ledger_id = Column(ForeignKey("account_ledger.id", ondelete="SET NULL"), nullable=True, index=True)
     saved_bank_account_id = Column(ForeignKey("saved_bank_account.id", ondelete="SET NULL"), nullable=True, index=True)

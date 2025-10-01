@@ -32,6 +32,7 @@ class User(BaseModel):
     
     # Bidirectional relationship with Contact
     contacts = relationship("Contact", back_populates="creator", cascade="all, delete-orphan")
+    investor_profile = relationship("Investor", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
     # Many-to-Many relationship with Permission
     permissions = relationship(
