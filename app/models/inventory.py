@@ -43,4 +43,5 @@ class Inventory(BaseModel):
     one_gram_coin = Column(BigInteger, nullable=False, default=0)
 
     # Relationship
-    transaction = relationship("Transaction", back_populates="inventory_entry")
+    transaction = relationship("Transaction")
+    payment = relationship("Payment")
