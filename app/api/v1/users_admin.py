@@ -180,7 +180,7 @@ def update_user_by_id(
     db: Session = Depends(deps.get_db),
     user_id: uuid.UUID,
     user_in: UserUpdateAdmin,
-    current_user: User = Depends(deps.get_current_active_user)
+    current_user: User = Depends(deps.get_current_active_admin_or_user)
 ):
     """Admin endpoint to update a user's details."""
     user_to_update = user_service.get_user_by_id(db=db, user_id=user_id)
@@ -192,7 +192,6 @@ def update_user_by_id(
     response_model=UserPublic,
     summary="Delete a User (Admin Only)",
     description="Allows an administrator to delete a non-admin user.",
-    dependencies=[Depends(deps.require_role([UserRole.ADMIN]))],
      responses={
         200: {"description": "User deleted successfully"},
         403: {"description": "Forbidden", "model": ErrorDetail, "content": {"application/json": {"examples": {
@@ -206,7 +205,7 @@ def delete_user(
     *,
     db: Session = Depends(deps.get_db),
     user_id: uuid.UUID,
-    current_user: User = Depends(deps.get_current_active_user)
+    current_user: User = Depends(deps.require_role([UserRole.ADMIN]))
 ):
     """Admin endpoint to delete a user."""
     deleted_user = user_service.delete_user(db=db, user_id=user_id, current_user=current_user)
@@ -250,7 +249,6 @@ def add_permission_to_user(
     user_id: uuid.UUID,
     permission_in: UserPermissionCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
 ):
     user = permission_service.add_permission_to_user(
         db=db,
@@ -276,7 +274,6 @@ def remove_permission_from_user(
     user_id: uuid.UUID,
     permission_name: PermissionName,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
 ):
     permission_service.remove_permission_from_user(
         db=db,

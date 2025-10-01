@@ -17,6 +17,7 @@ class InvestorRepository(BaseRepository[Investor, InvestorCreate, InvestorUpdate
         last_name: Optional[str] = None,
         national_number: Optional[str] = None,
         phone_number: Optional[str] = None,
+        username: Optional[str] = None,
         status: Optional[InvestorStatus] = None,
         skip: int = 0,
         limit: int = 100
@@ -39,6 +40,13 @@ class InvestorRepository(BaseRepository[Investor, InvestorCreate, InvestorUpdate
 
         if status:
             query = query.filter(self.model.status == status)
+            
+        # Join with User for username
+        if username:
+            from app.models.user import User
+            query = query.join(User)
+            # query = query.filter(User.username.ilike(f"%{username}%"))
+            query = query.filter(User.username == username)
             
         return query.offset(skip).limit(limit).all()
 

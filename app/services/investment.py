@@ -1,6 +1,7 @@
 import uuid
 from sqlalchemy.orm import Session
 from fastapi import status
+from typing import Any, List
 
 from app.core.exceptions import AppException
 from app.models.investment import Investment
@@ -34,5 +35,15 @@ class InvestmentService:
         if investment_to_delete:
             investment_repo.remove(db, id=investment_to_delete.id)
 
+    def search(
+        self,
+        db: Session,
+        **kwargs: Any
+    ) -> List[Investment]:
+        """
+        Handles business logic for searching investment records.
+        Forwards all search criteria to the repository layer.
+        """
+        return investment_repo.search(db=db, **kwargs)
 
 investment_service = InvestmentService()

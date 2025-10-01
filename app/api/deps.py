@@ -103,3 +103,10 @@ def require_permission(required_permission: PermissionName):
             )
         return current_user
     return permission_checker
+
+
+# --- Role-specific dependency shortcuts ---
+# Use these in your endpoints for cleaner, more readable authorization checks.
+
+get_current_active_admin_or_user = require_role([UserRole.ADMIN, UserRole.USER])
+get_current_active_investor = require_role([UserRole.INVESTOR])

@@ -17,7 +17,8 @@ from app.api.v1 import (
     payments,
     backup,
     investors_admin,
-    investors_me
+    investors_me,
+    investments
 )
 
 # --- Main API Router ---
@@ -59,3 +60,4 @@ api_router.include_router(payments.router, prefix="/payments", tags=["Payments"]
 # --- Investor Endpoints ---
 api_router.include_router(investors_admin.router, prefix="/investors", tags=["Investors - Admin"])
 api_router.include_router(investors_me.router, prefix="/investors", tags=["Investors - Me"])
+api_router.include_router(investments.router, prefix="/investments", tags=["Investments"])

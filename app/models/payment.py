@@ -35,3 +35,6 @@ class Payment(BaseModel):
     account_ledger = relationship("AccountLedger", back_populates="payments")
     saved_bank_account = relationship("SavedBankAccount", back_populates="payments")
     contact = relationship("Contact", back_populates="payments")
+    
+    # One-to-one relationship: A payment can create at most one investment.
+    investment_created = relationship("Investment", back_populates="payment", uselist=False, cascade="all, delete-orphan")

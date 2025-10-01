@@ -30,7 +30,7 @@ router = APIRouter()
 def create_transaction_item(
     item_in: TransactionItemCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
 ):
     """Adds a new line item to a transaction."""
     return transaction_item_service.create_item(db, item_in=item_in, current_user=current_user)
@@ -51,7 +51,7 @@ def update_transaction_item(
     item_id: uuid.UUID,
     item_in: TransactionItemUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
 ):
     """Updates a line item in a transaction."""
     return transaction_item_service.update_item(db, item_id=item_id, item_in=item_in, current_user=current_user)
@@ -71,7 +71,7 @@ def update_transaction_item(
 def delete_transaction_item(
     item_id: uuid.UUID,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
 ):
     """Deletes a line item from a transaction."""
     transaction_item_service.delete_item(db, item_id=item_id, current_user=current_user)
