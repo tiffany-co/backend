@@ -8,7 +8,8 @@ from app.models.user import User
 from app.models.enums.user import UserRole
 from app.repository.user import user_repo
 from app.schema.user import UserCreate, UserUpdateAdmin, UserUpdateMe, AdminCreate
-from app.core.security import get_hashed_value
+from app.schema.investor import InvestorPasswordUpdate
+from app.core.security import get_hashed_value, verify_value
 
 class UserService:
     """
@@ -39,25 +40,33 @@ class UserService:
         """Get all users from the database."""
         return user_repo.get_multi(db, skip=skip, limit=limit)
 
-    def create_user(self, db: Session, *, user_in: Union[UserCreate, AdminCreate]) -> User:
+    def create_user(self, db: Session, *, user_in: Union[UserCreate, AdminCreate, dict]) -> User:
         """
         Handles the business logic for creating a new user.
-        New users are always created with the 'USER' role by default.
+        Accepts a schema or a dictionary for flexibility.
         """
-        if user_repo.get_by_username(db, username=user_in.username):
+        if isinstance(user_in, dict):
+            user_in_data = user_in
+        else:
+            user_in_data = user_in.model_dump()
+            
+        if user_repo.get_by_username(db, username=user_in_data['username']):
             raise AppException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="A user with this username already exists.",
             )
-        if user_repo.get_by_phone_number(db, phone_number=user_in.phone_number):
+            
+        # Phone number is nullable, so only check if it's provided
+        if user_in_data.get("phone_number") and user_repo.get_by_phone_number(db, phone_number=user_in_data["phone_number"]):
             raise AppException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="A user with this phone number already exists.",
             )
 
-        user_data_for_db = user_in.model_dump()
-        user_data_for_db["hashed_password"] = get_hashed_value(user_in.password)
-        del user_data_for_db["password"]
+        user_data_for_db = user_in_data.copy()
+        user_data_for_db["hashed_password"] = get_hashed_value(user_in_data["password"])
+        if "password" in user_data_for_db:
+            del user_data_for_db["password"]
         
         if "role" not in user_data_for_db:
             user_data_for_db["role"] = UserRole.USER
@@ -102,7 +111,7 @@ class UserService:
         
         update_data = user_in.model_dump(exclude_unset=True)
         if "password" in update_data and update_data["password"]:
-            update_data["hashed_password"] = (update_data["password"])
+            update_data["hashed_password"] = get_hashed_value(update_data["password"])
             del update_data["password"]
 
         updated_user = user_repo.update(db, db_obj=user_to_update, obj_in=update_data)
@@ -128,6 +137,17 @@ class UserService:
 
         deleted_user = user_repo.remove(db, id=user_id)
         return deleted_user
+
+    def update_password(self, db: Session, *, user: User, password_in: InvestorPasswordUpdate) -> User:
+        """Updates a user's password after verifying their current password."""
+        if not verify_value(password_in.current_password, user.hashed_password):
+            raise AppException(status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect current password.")
+        
+        user.hashed_password = get_hashed_value(password_in.new_password)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        return user
 
 user_service = UserService()
 
