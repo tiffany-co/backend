@@ -30,7 +30,7 @@ class Payment(BaseModel):
     recorder = relationship("User", foreign_keys=[recorder_id])
     photo_holder = relationship("User", foreign_keys=[photo_holder_id])
     
-    investment = relationship("Investment")
+    investor = relationship("Investor", back_populates="payments")
     transaction = relationship("Transaction", back_populates="payments")
     account_ledger = relationship("AccountLedger", back_populates="payments")
     saved_bank_account = relationship("SavedBankAccount", back_populates="payments")

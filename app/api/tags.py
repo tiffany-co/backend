@@ -17,4 +17,6 @@ tags_metadata = [
     {"name": "Payments", "description": "Endpoints for recording and managing financial payments."},
     {"name": "Audit Logs", "description": "[Admin Only] Endpoints for viewing the database audit trail."},
     {"name": "Database Backup", "description": "[Admin Only] Endpoints for exporting and importing database backups."},
+    {"name": "Investors - Admin", "description": "[Admin Only] Endpoints for managing investor profiles."},
+    {"name": "Investors - Me", "description": "[Investor Only] Endpoints for an investor to manage their own account."},
 ]
