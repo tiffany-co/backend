@@ -61,8 +61,6 @@ class PaymentService:
             contact_service.get_contact_by_id(db, contact_id=payment_in.contact_id)
         if payment_in.transaction_id:
             transaction_service.get_by_id(db, transaction_id=payment_in.transaction_id, current_user=current_user)
-        if payment_in.investment_id:
-            investment_service.get_by_id(db, investment_id=payment_in.investment_id)
         if payment_in.saved_bank_account_id:
             saved_bank_account_service.get_by_id(db, account_id=payment_in.saved_bank_account_id)
         # account_ledger_id's existence is checked during business logic validation
