@@ -1,13 +1,17 @@
 from sqlalchemy.orm import Session
 from typing import List, Optional
-import uuid
 
 from app.repository.base import BaseRepository
 from app.models.investor import Investor, InvestorStatus
+from app.models.user import User
 from app.schema.investor import InvestorCreate, InvestorUpdate
 
 class InvestorRepository(BaseRepository[Investor, InvestorCreate, InvestorUpdate]):
     """Repository for investor-related database operations."""
+
+    def get_by_username(self, db: Session, *, username: str) -> Optional[Investor]:
+        """Gets a single investor by their associated username."""
+        return db.query(self.model).join(Investor.user).filter(User.username == username).first()
 
     def search(
         self, 

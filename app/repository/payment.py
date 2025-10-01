@@ -14,6 +14,10 @@ from app.schema.payment import PaymentCreate, PaymentUpdate
 class PaymentRepository(BaseRepository[Payment, PaymentCreate, PaymentUpdate]):
     """Repository for payment-related database operations."""
 
+    def get_by_description(self, db: Session, *, description: str) -> Optional[Payment]:
+        """Gets the first payment found with a matching description."""
+        return db.query(self.model).filter(self.model.description == description).first()
+
     def search(
         self,
         db: Session,

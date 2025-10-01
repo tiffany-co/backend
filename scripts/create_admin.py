@@ -29,8 +29,8 @@ def create_admin():
         # --- Get user input ---
         console.print("Please provide the following details for the new admin user:", style="yellow")
         username = console.input("[bold]Enter username:[/bold] ")
-        full_name = console.input("[bold]Enter your full name:[/bold] ")
-        phone_number = console.input("[bold]Enter phone number:[/bold] ")
+        full_name = console.input("[bold]Enter your full name:[/bold] ").strip() or None
+        phone_number = console.input("[bold]Enter phone number:[/bold] ").strip() or None
         
         # --- Get password securely ---
         password = getpass("Enter password (input will be hidden): ")

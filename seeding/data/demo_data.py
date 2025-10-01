@@ -4,6 +4,7 @@ from app.schema.user import UserCreate, AdminCreate
 from app.schema.contact import ContactCreate
 from app.schema.saved_bank_account import SavedBankAccountCreate
 from app.schema.inventory import InventoryAdjust, InventoryItemsSchema
+from app.schema.investor import InvestorCreate
 from .scenarios import ALL_SCENARIOS
 
 DEMO_USERS = [
@@ -20,6 +21,20 @@ DEMO_USERS = [
         phone_number="09121112233",
         password="11111111",
     ),
+]
+
+DEMO_INVESTORS = [
+    {
+        "creator_username": "admin",
+        "investor": InvestorCreate(
+            first_name="سارا",
+            last_name="محمدی",
+            phone_number="09351112233",
+            national_number="1112223334",
+            username="sara",
+            password="11111111"
+        )
+    }
 ]
 
 DEMO_CONTACTS = [
