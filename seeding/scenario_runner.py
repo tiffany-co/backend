@@ -15,6 +15,8 @@ from app.repository.item import item_repo
 from app.repository.transaction import transaction_repo
 from app.repository.account_ledger import account_ledger_repo
 from app.repository.saved_bank_account import saved_bank_account_repo
+from app.repository.investor import investor_repo
+from app.repository.payment import payment_repo
 
 # --- Services ---
 from app.services.transaction import transaction_service
@@ -38,25 +40,46 @@ class ScenarioRunner:
 
     def run(self):
         """Public method to execute the scenario."""
-        console.print(f"\nRunning '[bold blue]{self.data['name']}[/bold blue]'...", style="yellow")
+        console.print(f"\n[6/6] Running '[bold blue]{self.data['name']}[/bold blue]'...", style="yellow")
         
-        if transaction_repo.get_by_note(self.db, note=self.data["transaction"]["note"]):
+        # Check if the scenario has already been run to ensure idempotency.
+        ignore = False
+        if "transaction" in self.data:
+            # For transaction-based scenarios, check by the unique transaction note.
+            if transaction_repo.get_by_note(self.db, note=self.data["transaction"]["note"]):
+                ignore = True
+        # For payment-only scenarios, check by the description of the first payment.
+        elif "payments" in self.data:
+            first_payment_description = self.data["payments"][0].get("description")
+            if first_payment_description and payment_repo.get_by_description(self.db, description=first_payment_description):
+                ignore = True
+                
+        if ignore:
             console.print(f"   - Scenario already run. Skipping.", style="dim")
             return
-
+        
         self._fetch_dependencies()
-        self._create_transaction_and_items()
-        self._approve_transaction()
-        self._process_payments()
-        self._process_ledger()
+        
+        if "transaction" in self.data:
+            self._create_transaction_and_items()
+            self._approve_transaction()
+            self._process_ledger()
 
-        console.print(f"   - Scenario complete for contact: '[bold green]{self.dependencies['contact'].last_name}[/bold green]'", style="green")
+        self._process_payments()
+
+
+        console.print(f"   - Scenario '{self.data['name']}' complete.", style="green")
 
     def _fetch_dependencies(self):
         """Fetches all required existing objects from the DB."""
         self.dependencies['recorder'] = user_repo.get_by_username(self.db, username=self.data["recorder_username"])
-        self.dependencies['contact'] = contact_repo.get_by_national_number(self.db, national_number=self.data["contact_national_number"])
         self.dependencies['admin'] = user_repo.get_by_username(self.db, username='admin')
+        
+        if self.data.get("contact_national_number"):
+            self.dependencies['contact'] = contact_repo.get_by_national_number(self.db, national_number=self.data["contact_national_number"])
+        
+        if self.data.get("investor_username"):
+            self.dependencies['investor'] = investor_repo.get_by_username(self.db, username=self.data["investor_username"])
 
     def _create_transaction_and_items(self):
         """Creates the main transaction and its associated items."""
@@ -99,11 +122,15 @@ class ScenarioRunner:
     def _create_and_approve_payment(self, payment_data: Dict[str, Any]):
         """Creates and approves a single payment."""
         recorder = self.dependencies['recorder']
-        transaction = self.created_objects['transaction']
+        transaction = self.created_objects.get('transaction')
+        investor = self.dependencies.get('investor')
         
         payment_create_data = payment_data.copy()
-        payment_create_data.setdefault('transaction_id', transaction.id)
-        payment_create_data.setdefault('contact_id', self.dependencies['contact'].id)
+        if transaction:
+            payment_create_data.setdefault('transaction_id', transaction.id)
+            payment_create_data.setdefault('contact_id', self.dependencies['contact'].id)
+        if investor:
+            payment_create_data.setdefault('investor_id', investor.id)
 
         # Handle dynamic amount calculation for debt settlement
         if payment_data.get("amount_description"):

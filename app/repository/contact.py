@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from app.repository.base import BaseRepository
 from app.models.contact import Contact
@@ -7,7 +7,7 @@ from app.schema.contact import ContactCreate, ContactUpdate
 from app.models.enums.contact import ContactType
 import uuid
 
-class ContactRepository(BaseRepository[Contact, ContactCreate, ContactUpdate]):
+class ContactRepository(BaseRepository[Contact, Union[ContactCreate, dict], ContactUpdate]):
     """
     Repository for contact-related database operations.
     """

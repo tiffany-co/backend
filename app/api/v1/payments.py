@@ -30,7 +30,7 @@ router = APIRouter()
 def create_payment(
     payment_in: PaymentCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
 ):
     return payment_service.create(db=db, payment_in=payment_in, current_user=current_user)
 
@@ -47,7 +47,7 @@ def create_payment(
 )
 def search_payments(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
     # Filters
     payment_method: Optional[PaymentMethod] = Query(None),
     direction: Optional[PaymentDirection] = Query(None),
@@ -99,7 +99,7 @@ def search_payments(
 def get_payment_by_id(
     payment_id: uuid.UUID,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
 ):
     return payment_service.get_payment_by_id_and_check_permission(db, payment_id=payment_id, current_user=current_user)
 
@@ -119,7 +119,7 @@ def update_payment(
     payment_id: uuid.UUID,
     payment_in: PaymentUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
 ):
     return payment_service.update(db, payment_id=payment_id, payment_in=payment_in, current_user=current_user)
 
@@ -138,7 +138,7 @@ def update_payment(
 def delete_payment(
     payment_id: uuid.UUID,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
 ):
     payment_service.delete(db, payment_id=payment_id, current_user=current_user)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -158,7 +158,7 @@ def delete_payment(
 def approve_payment(
     payment_id: uuid.UUID,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
 ):
     return payment_service.approve(db, payment_id=payment_id, current_user=current_user)
 
@@ -177,7 +177,7 @@ def approve_payment(
 def reject_payment(
     payment_id: uuid.UUID,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
 ):
     return payment_service.reject(db, payment_id=payment_id, current_user=current_user)
 

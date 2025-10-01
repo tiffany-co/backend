@@ -27,7 +27,7 @@ router = APIRouter()
 def create_account_ledger(
     ledger_in: AccountLedgerCreate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
 ):
     return account_ledger_service.create(db=db, ledger_in=ledger_in, current_user=current_user)
 
@@ -43,7 +43,7 @@ def create_account_ledger(
 )
 def search_account_ledgers(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
     has_debt: Optional[bool] = Query(None, description="Set to 'true' to find entries with a non-zero debt."),
     debt: Optional[int] = Query(None, description="Search for ledger entries with a debt amount close to this value."),
     bank_name: Optional[str] = Query(None, description="Filter by bank name (case-insensitive, partial match)."),
@@ -78,7 +78,7 @@ def search_account_ledgers(
 def get_account_ledger_by_id(
     ledger_id: uuid.UUID,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
 ):
     return account_ledger_service.get_by_id(db, ledger_id=ledger_id)
 
@@ -98,7 +98,7 @@ def update_account_ledger(
     ledger_id: uuid.UUID,
     ledger_in: AccountLedgerUpdate,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
 ):
     return account_ledger_service.update(db, ledger_id=ledger_id, ledger_in=ledger_in)
 
@@ -117,7 +117,7 @@ def update_account_ledger(
 def delete_account_ledger(
     ledger_id: uuid.UUID,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: User = Depends(deps.get_current_active_admin_or_user),
 ):
     account_ledger_service.delete(db, ledger_id=ledger_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

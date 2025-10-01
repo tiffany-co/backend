@@ -49,7 +49,7 @@ router = APIRouter()
     }
 )
 def read_current_user(
-    current_user: User = Depends(deps.get_current_active_user)
+    current_user: User = Depends(deps.get_current_active_admin_or_user)
 ):
     """
     Get the profile of the currently logged-in user.
@@ -105,7 +105,7 @@ def update_current_user(
     *,
     db: Session = Depends(deps.get_db),
     user_in: UserUpdateMe,
-    current_user: User = Depends(deps.get_current_active_user)
+    current_user: User = Depends(deps.get_current_active_admin_or_user)
 ):
     """
     Update the profile of the currently logged-in user.
@@ -142,7 +142,7 @@ def update_current_user(
     }
 )
 def get_current_user_permissions(
-    current_user: User = Depends(deps.get_current_active_user)
+    current_user: User = Depends(deps.get_current_active_admin_or_user)
 ):
     """Get the permissions of the currently logged-in user."""
     return current_user.permissions

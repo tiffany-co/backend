@@ -61,12 +61,6 @@ class TransactionService:
         if transaction.status != ApprovalStatus.DRAFT:
             raise AppException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only transactions in 'draft' status can be deleted.")
         
-        # Before deleting, nullify the link from any inventory entries
-        db.refresh(transaction, attribute_names=['inventory_entries'])
-        for entry in transaction.inventory_entries:
-            entry.transaction_id = None
-            db.add(entry)
-        
         return transaction_repo.remove(db, id=transaction.id)
 
     def _recalculate_total_price(self, db: Session, transaction: Transaction):

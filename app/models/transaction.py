@@ -24,7 +24,6 @@ class Transaction(BaseModel):
     recorder = relationship("User")
     contact = relationship("Contact")
     items = relationship("TransactionItem", back_populates="transaction", cascade="all, delete-orphan")
-    inventory_entry = relationship("Inventory", back_populates="transaction", uselist=False)
     account_ledger_entry = relationship("AccountLedger", back_populates="transaction", uselist=False, cascade="all, delete-orphan")
     payments = relationship("Payment", back_populates="transaction")
     

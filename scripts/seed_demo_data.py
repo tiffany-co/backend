@@ -16,16 +16,19 @@ from app.repository.user import user_repo
 from app.repository.contact import contact_repo
 from app.repository.saved_bank_account import saved_bank_account_repo
 from app.repository.inventory import inventory_repo
+from app.repository.investor import investor_repo
 
 # --- Services ---
 from app.services.user import user_service
 from app.services.contact import contact_service
 from app.services.saved_bank_account import saved_bank_account_service
 from app.services.inventory import inventory_service
+from app.services.investor import investor_service
 
 # --- Demo Data & Runner ---
 from seeding.data.demo_data import (
     DEMO_USERS,
+    DEMO_INVESTORS,
     DEMO_CONTACTS,
     DEMO_SAVED_BANK_ACCOUNTS,
     DEMO_INVENTORY,
@@ -46,6 +49,7 @@ def seed_demo_data():
     try:
         # --- 1. Basic Setup ---
         _seed_users(db)
+        _seed_investors(db)
         _seed_contacts(db)
         _seed_saved_bank_accounts(db)
         _seed_initial_inventory(db)
@@ -65,7 +69,7 @@ def seed_demo_data():
 
 
 def _seed_users(db: Session):
-    console.print("\n[1/5] Seeding demo users...", style="yellow")
+    console.print("\n[1/6] Seeding demo users...", style="yellow")
     for user_in in DEMO_USERS:
         if not user_repo.get_by_username(db, username=user_in.username):
             user_service.create_user(db, user_in=user_in)
@@ -73,8 +77,19 @@ def _seed_users(db: Session):
         else:
             console.print(f"   - User '[cyan]{user_in.username}[/cyan]' already exists. Skipping.")
 
+def _seed_investors(db: Session):
+    console.print("\n[2/6] Seeding demo investors...", style="yellow")
+    for investor_data in DEMO_INVESTORS:
+        admin_user = user_repo.get_by_username(db, username=investor_data["creator_username"])
+        investor_in = investor_data["investor"]
+        if not investor_repo.get_by_username(db, username=investor_in.username):
+            investor_service.create(db, investor_in=investor_in, current_user=admin_user)
+            console.print(f"   - Created investor: '[bold green]{investor_in.username}[/bold green]'")
+        else:
+            console.print(f"   - Investor '[cyan]{investor_in.username}[/cyan]' already exists. Skipping.")
+
 def _seed_contacts(db: Session):
-    console.print("\n[2/5] Seeding demo contacts...", style="yellow")
+    console.print("\n[3/6] Seeding demo contacts...", style="yellow")
     for contact_data in DEMO_CONTACTS:
         owner = user_repo.get_by_username(db, username=contact_data["owner_username"])
         contact_in = contact_data["contact"]
@@ -85,7 +100,7 @@ def _seed_contacts(db: Session):
             console.print(f"   - Contact for '[cyan]{contact_in.first_name} {contact_in.last_name}[/cyan]' already exists. Skipping.")
 
 def _seed_saved_bank_accounts(db: Session):
-    console.print("\n[3/5] Seeding demo saved bank accounts...", style="yellow")
+    console.print("\n[4/6] Seeding demo saved bank accounts...", style="yellow")
     for account_in in DEMO_SAVED_BANK_ACCOUNTS:
         if not saved_bank_account_repo.get_by_name(db, name=account_in.name):
             saved_bank_account_service.create(db, account_in=account_in)
@@ -94,7 +109,7 @@ def _seed_saved_bank_accounts(db: Session):
             console.print(f"   - Bank Account '[cyan]{account_in.name}[/cyan]' already exists. Skipping.")
 
 def _seed_initial_inventory(db: Session):
-    console.print("\n[4/5] Seeding initial inventory...", style="yellow")
+    console.print("\n[5/6] Seeding initial inventory...", style="yellow")
     if not inventory_repo.get_latest(db):
         inventory_service.adjust_inventory(db, adjustment_in=DEMO_INVENTORY)
         console.print("   - Created initial inventory snapshot.", style="green")
