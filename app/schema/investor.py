@@ -20,6 +20,7 @@ class InvestorCreate(BaseModel):
 class InvestorUpdate(BaseModel):
     """Schema for an admin to update an investor's status."""
     status: Optional[InvestorStatus] = None
+    credit: Optional[int] = Field(None, ge=0, description="The new credit balance for the investor in Rials.")
 
 class InvestorPasswordUpdate(BaseModel):
     """Schema for an investor to update their own password."""

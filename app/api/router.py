@@ -58,6 +58,6 @@ api_router.include_router(account_ledgers.router, prefix="/account-ledgers", tag
 api_router.include_router(payments.router, prefix="/payments", tags=["Payments"])
 
 # --- Investor Endpoints ---
+api_router.include_router(investors_me.router, prefix="/investors", tags=["Investors - Me"]) # it should be before investor-admin
 api_router.include_router(investors_admin.router, prefix="/investors", tags=["Investors - Admin"])
-api_router.include_router(investors_me.router, prefix="/investors", tags=["Investors - Me"])
 api_router.include_router(investments.router, prefix="/investments", tags=["Investments"])

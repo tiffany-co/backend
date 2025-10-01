@@ -55,19 +55,17 @@ class InvestorService:
         """Updates an investor's status and syncs the associated user's active state."""
         investor_to_update = self.get_by_id(db, investor_id=investor_id)
         
-        updated_investor = investor_repo.update(db, db_obj=investor_to_update, obj_in=investor_in)
-        
-        # Sync user's active status with investor's closed status
-        if investor_in.status is not None:
-            user_to_update = updated_investor.user
+        # Sync user's active status if the investor status changes
+        if investor_in.status is not None and investor_in.status != investor_to_update.status:
+            user_to_update = investor_to_update.user
             if investor_in.status == InvestorStatus.CLOSED:
                 user_to_update.is_active = False
-            elif investor_to_update.status == InvestorStatus.CLOSED: # If reopening a closed account
+            # elif investor_to_update.status == InvestorStatus.CLOSED and investor_in.status != InvestorStatus.CLOSED:
+            elif investor_to_update.status == InvestorStatus.CLOSED: # we don't need second condition because it is checked first
                 user_to_update.is_active = True
             db.add(user_to_update)
-            db.commit()
 
-        return updated_investor
+        return investor_repo.update(db, db_obj=investor_to_update, obj_in=investor_in)
 
     def delete(self, db: Session, *, investor_id: uuid.UUID) -> Investor:
         """Deletes an investor and their associated contact and user."""
