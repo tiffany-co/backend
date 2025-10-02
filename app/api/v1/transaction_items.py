@@ -36,7 +36,7 @@ def create_transaction_item(
     return transaction_item_service.create_item(db, item_in=item_in, current_user=current_user)
 
 @router.put(
-    "/{item_id}", 
+    "/{transaction_item_id}", 
     response_model=TransactionItemPublic,
     summary="Update an Item in a Draft Transaction",
     description="Updates an existing transaction item. The parent transaction's total_price is automatically recalculated. Can only be done on transactions in 'draft' status.",
@@ -48,16 +48,16 @@ def create_transaction_item(
     }
 )
 def update_transaction_item(
-    item_id: uuid.UUID,
+    transaction_item_id: uuid.UUID,
     item_in: TransactionItemUpdate,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_admin_or_user),
 ):
     """Updates a line item in a transaction."""
-    return transaction_item_service.update_item(db, item_id=item_id, item_in=item_in, current_user=current_user)
+    return transaction_item_service.update_item(db, item_id=transaction_item_id, item_in=item_in, current_user=current_user)
 
 @router.delete(
-    "/{item_id}", 
+    "/{transaction_item_id}", 
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete an Item from a Draft Transaction",
     description="Deletes an existing transaction item. The parent transaction's total_price is automatically recalculated. Can only be done on transactions in 'draft' status.",
@@ -69,11 +69,11 @@ def update_transaction_item(
     }
 )
 def delete_transaction_item(
-    item_id: uuid.UUID,
+    transaction_item_id: uuid.UUID,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_admin_or_user),
 ):
     """Deletes a line item from a transaction."""
-    transaction_item_service.delete_item(db, item_id=item_id, current_user=current_user)
+    transaction_item_service.delete_item(db, item_id=transaction_item_id, current_user=current_user)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
