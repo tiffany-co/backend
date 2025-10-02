@@ -1,4 +1,4 @@
-from pydantic import BaseModel as PydanticBaseModel
+from pydantic import ConfigDict, BaseModel as PydanticBaseModel
 from datetime import datetime
 import uuid
 
@@ -7,14 +7,7 @@ class BaseModel(PydanticBaseModel):
     A base Pydantic model that includes common configuration.
     All other schemas will inherit from this model.
     """
-    class Config:
-        """
-        Pydantic model configuration.
-        - from_attributes = True: Allows the model to be created from ORM objects
-          (e.g., SQLAlchemy models). This is key for converting database objects
-          into API response schemas.
-        """
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class BaseSchema(BaseModel):
     """

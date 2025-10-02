@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 import uuid
 
@@ -13,12 +13,11 @@ class PermissionPublic(BaseModel):
     name_fa: str
     description: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class UserPermissionCreate(BaseModel):
     """
     Schema for adding a permission to a user.
     """
-    permission_name: PermissionName = Field(..., example=PermissionName.CONTACT_UPDATE_ALL)
+    permission_name: PermissionName = Field(..., json_schema_extra={"example": PermissionName.CONTACT_UPDATE_ALL})
 

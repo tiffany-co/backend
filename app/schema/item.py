@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List
 import uuid
 
@@ -9,10 +9,10 @@ from .item_financial_profile import ItemFinancialProfilePublic, ItemFinancialPro
 
 class ItemBase(BaseModel):
     """Base schema for core item data."""
-    name: str = Field(..., example="Emami Coin")
-    name_fa: str = Field(..., example="سکه امامی")
-    category: str = Field(..., example="Coin")
-    description: Optional[str] = Field(None, example="Standard Emami gold coins.")
+    name: str = Field(..., json_schema_extra={"example": "Emami Coin"})
+    name_fa: str = Field(..., json_schema_extra={"example": "سکه امامی"})
+    category: str = Field(..., json_schema_extra={"example": "Coin"})
+    description: Optional[str] = Field(None, json_schema_extra={"example": "Standard Emami gold coins."})
     measurement_type: MeasurementType
     is_active: bool = Field(True)
 
@@ -28,15 +28,13 @@ class ItemInList(ItemBase):
     """
     id: uuid.UUID
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ItemPublic(ItemBase, BaseSchema):
     """
     Schema for representing a single, detailed item, including timestamps.
     """
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ItemWithProfilesPublic(ItemPublic):
     """
@@ -52,7 +50,7 @@ class ItemInListWithProfiles(ItemInList):
 
 class ItemUpdate(BaseModel):
     """Schema for updating an item's core identity. All fields are optional."""
-    name_fa: Optional[str] = Field(None, example="سکه امامی طرح جدید")
+    name_fa: Optional[str] = Field(None, json_schema_extra={"example": "سکه امامی طرح جدید"})
     category: Optional[str] = Field(None)
     description: Optional[str] = Field(None)
     is_active: Optional[bool] = Field(None)
