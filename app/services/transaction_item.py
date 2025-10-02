@@ -40,7 +40,7 @@ class TransactionItemService:
         
         create_data = item_in.model_dump()
         
-        create_data["total_price"] = self._calculate_item_total_price(item_in, item_in.transaction_type)
+        create_data["total_price"] = self._calculate_item_total_price(item_in)
         
         new_item = transaction_item_repo.create(db, obj_in=create_data)
         transaction_service._recalculate_total_price(db, transaction=transaction)
@@ -65,7 +65,7 @@ class TransactionItemService:
         update_data = item_in.model_dump(exclude_unset=True)
         recalc_fields = {'unit_price', 'weight_count', 'ojrat', 'profit', 'tax'}
         if any(field in update_data for field in recalc_fields):
-            updated_item.total_price = self._calculate_item_total_price(updated_item, updated_item.transaction_type)
+            updated_item.total_price = self._calculate_item_total_price(updated_item)
             db.commit()
             db.refresh(updated_item)
             
@@ -86,7 +86,7 @@ class TransactionItemService:
         transaction_service._recalculate_total_price(db, transaction=transaction)
         return deleted_item
 
-    def _calculate_item_total_price(self, item: TransactionItem, transaction_type: TransactionType) -> int:
+    def _calculate_item_total_price(self, item: TransactionItem) -> int:
         """
         BUY: When we want to buy something, tax, profit, and labor (ojrat) are currently calculated as zero
         SELL: Calculation according to the formula given in Excel (simplified)
