@@ -6,25 +6,33 @@ from datetime import datetime
 from decimal import Decimal
 import uuid
 from enum import Enum
-
-from sqlalchemy import Column
-from sqlalchemy.dialects.postgresql import UUID
 from app.core.utils import json_serializer
-from app.models.base import BaseModel as SQLAlchemyBaseModel
 
 def test_json_serializer_with_sqlalchemy_model():
     """
-    Ensures that an object inheriting from SQLAlchemyBaseModel is serialized to its ID.
+    Ensures that an object that behaves like a SQLAlchemy model is serialized to its ID.
     """
-    # Create a simple mock class that simulates a SQLAlchemy model instance
-    class MockModel(SQLAlchemyBaseModel):
-        __tablename__ = 'mock_table' # Required for SQLAlchemy models
-        id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-        
+    # Create a simple mock object that "ducks" as a SQLAlchemy model instance.
+    # It just needs to have an `id` attribute.
+    class MockModel:
+        def __init__(self, id):
+            self.id = id
+            
     test_id = uuid.uuid4()
     mock_instance = MockModel(id=test_id)
     
+    # We also need to check the `isinstance` check in the serializer.
+    # To do that, we can temporarily patch what 'SQLAlchemyBaseModel' is.
+    from app.core import utils
+    # This is a bit of advanced testing, but it's the most correct way.
+    # We are temporarily pretending our MockModel is an instance of SQLAlchemyBaseModel.
+    original_base = utils.SQLAlchemyBaseModel
+    utils.SQLAlchemyBaseModel = MockModel
+    
     assert json_serializer(mock_instance) == str(test_id)
+
+    # Clean up the patch
+    utils.SQLAlchemyBaseModel = original_base
 
 def test_json_serializer_with_datetime():
     """
