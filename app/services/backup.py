@@ -1,9 +1,10 @@
 import json
 from sqlalchemy.orm import Session
-from sqlalchemy import inspect, text
+from sqlalchemy import inspect, text, select
 
 from app.db.base import Base
 from app.models.audit_log import AuditLog
+from app.models.user import user_permission_association
 from app.core.exceptions import AppException
 from fastapi import status
 from app.core.utils import json_serializer
@@ -51,6 +52,11 @@ class BackupService:
                     {c.key: getattr(row, c.key) for c in inspect(row).mapper.column_attrs}
                     for row in records
                 ]
+                
+        # --- Manually Backup the Association Table ---
+        stmt = select(user_permission_association)
+        result = db.execute(stmt).mappings().all()
+        backup_data["user_permission"] = [dict(row) for row in result]
         
         return json.dumps(backup_data, indent=4, default=json_serializer)
 
