@@ -1,6 +1,7 @@
 import uuid
 from .base import BaseSchema
 from typing import Optional
+from pydantic import ConfigDict
 
 class InvestmentPublic(BaseSchema):
     """Public schema for representing an investment."""
@@ -8,5 +9,4 @@ class InvestmentPublic(BaseSchema):
     investor_id: uuid.UUID
     payment_id: Optional[uuid.UUID]
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

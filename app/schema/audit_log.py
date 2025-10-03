@@ -1,5 +1,5 @@
 import uuid
-from pydantic import BaseModel, Field
+from pydantic import ConfigDict
 from typing import Optional, Dict, Any
 
 from .base import BaseSchema
@@ -15,6 +15,5 @@ class AuditLogPublic(BaseSchema):
     before_state: Optional[Dict[str, Any]]
     after_state: Optional[Dict[str, Any]]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 

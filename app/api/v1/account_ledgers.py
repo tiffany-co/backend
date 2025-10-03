@@ -29,7 +29,7 @@ def create_account_ledger(
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_active_admin_or_user),
 ):
-    return account_ledger_service.create(db=db, ledger_in=ledger_in, current_user=current_user)
+    return account_ledger_service.create(db=db, ledger_in=ledger_in)
 
 @router.get(
     "/search",

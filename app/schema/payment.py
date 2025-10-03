@@ -1,6 +1,5 @@
 import uuid
-from datetime import datetime
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, model_validator, ConfigDict
 from typing import Optional, Any
 
 from .base import BaseSchema
@@ -66,6 +65,5 @@ class PaymentPublic(PaymentBase, BaseSchema):
     recorder_id: uuid.UUID
     status: ApprovalStatus
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 

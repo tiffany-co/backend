@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 import uuid
 from typing import Optional
 
@@ -11,11 +11,11 @@ class ContactBase(BaseModel):
     """
     Base schema for contact data, containing common fields.
     """
-    first_name: Optional[str] = Field(None, min_length=1, max_length=50, example="John")
-    last_name: str = Field(..., min_length=1, max_length=50, example="Doe")
-    national_number: Optional[str] = Field(None, min_length=10, max_length=10, example="1234567890")
-    phone_number: Optional[str] = Field(None, min_length=10, max_length=15, example="09123456789")
-    type: ContactType = Field(..., example=ContactType.CUSTOMER)
+    first_name: Optional[str] = Field(None, min_length=1, max_length=50, json_schema_extra={"example": "John"})
+    last_name: str = Field(..., min_length=1, max_length=50, json_schema_extra={"example": "Doe"})
+    national_number: Optional[str] = Field(None, min_length=10, max_length=10, json_schema_extra={"example": "1234567890"})
+    phone_number: Optional[str] = Field(None, min_length=10, max_length=15, json_schema_extra={"example": "09123456789"})
+    type: ContactType = Field(..., json_schema_extra={"example": ContactType.CUSTOMER})
 
 class ContactPublic(ContactBase, BaseSchema):
     """
@@ -24,8 +24,7 @@ class ContactPublic(ContactBase, BaseSchema):
     """
     creator_user_id: uuid.UUID
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- Schemas for Creating and Updating ---
 
@@ -40,8 +39,8 @@ class ContactUpdate(BaseModel):
     """
     Schema for updating an existing contact. All fields are optional.
     """
-    first_name: Optional[str] = Field(None, min_length=1, max_length=50, example="Jonathan")
-    last_name: Optional[str] = Field(None, min_length=1, max_length=50, example="Doe")
-    national_number: Optional[str] = Field(None, min_length=10, max_length=10, example="0987654321")
-    phone_number: Optional[str] = Field(None, min_length=10, max_length=15, example="09123456789")
-    type: Optional[ContactType] = Field(None, example=ContactType.SUPPLIER)
+    first_name: Optional[str] = Field(None, min_length=1, max_length=50, json_schema_extra={"example": "Jonathan"})
+    last_name: Optional[str] = Field(None, min_length=1, max_length=50, json_schema_extra={"example": "Doe"})
+    national_number: Optional[str] = Field(None, min_length=10, max_length=10, json_schema_extra={"example": "0987654321"})
+    phone_number: Optional[str] = Field(None, min_length=10, max_length=15, json_schema_extra={"example": "09123456789"})
+    type: Optional[ContactType] = Field(None, json_schema_extra={"example": ContactType.SUPPLIER})
