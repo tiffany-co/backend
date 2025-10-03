@@ -1,13 +1,10 @@
 import uuid
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List
-from datetime import datetime
 
 from app.models.enums.shared import ApprovalStatus
 from .base import BaseSchema
 from .transaction_item import TransactionItemPublic
-from .user import UserPublic
-from .contact import ContactPublic
 
 # --- Base Schemas ---
 
@@ -39,8 +36,7 @@ class TransactionPublic(BaseSchema):
     # recorder: UserPublic
     # contact: ContactPublic
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class TransactionWithItemsPublic(TransactionPublic):
     """Extends TransactionPublic to include the list of associated items."""

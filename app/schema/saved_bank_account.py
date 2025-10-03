@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from typing import Optional
 
 from .base import BaseSchema
@@ -7,11 +7,11 @@ class SavedBankAccountBase(BaseModel):
     """
     Base schema for saved bank account data.
     """
-    name: str = Field(..., min_length=2, max_length=100, example="Main Business Account")
+    name: str = Field(..., min_length=2, max_length=100, json_schema_extra={"example": "Main Business Account"})
     # --- UPDATED: description is now optional ---
-    description: Optional[str] = Field(None, max_length=500, example="Primary account for daily transactions.")
+    description: Optional[str] = Field(None, max_length=500, json_schema_extra={"example": "Primary account for daily transactions."})
     # --- NEW: Added card_number with validation ---
-    card_number: Optional[str] = Field(None, min_length=16, max_length=16, example="1111222233334444")
+    card_number: Optional[str] = Field(None, min_length=16, max_length=16, json_schema_extra={"example": "1111222233334444"})
 
     @field_validator("card_number")
     def validate_card_number_is_digits(cls, v):
@@ -28,9 +28,9 @@ class SavedBankAccountUpdate(BaseModel):
     """
     Schema for updating a saved bank account. All fields are optional.
     """
-    name: Optional[str] = Field(None, min_length=2, max_length=100, example="Updated Business Account")
-    description: Optional[str] = Field(None, max_length=500, example="Updated description.")
-    card_number: Optional[str] = Field(None, min_length=16, max_length=16, example="5555666677778888")
+    name: Optional[str] = Field(None, min_length=2, max_length=100, json_schema_extra={"example": "Updated Business Account"})
+    description: Optional[str] = Field(None, max_length=500, json_schema_extra={"example": "Updated description."})
+    card_number: Optional[str] = Field(None, min_length=16, max_length=16, json_schema_extra={"example": "5555666677778888"})
 
     @field_validator("card_number")
     def validate_card_number_is_digits(cls, v):
@@ -43,6 +43,5 @@ class SavedBankAccountPublic(SavedBankAccountBase, BaseSchema):
     """
     Schema for publicly available saved bank account information.
     """
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 

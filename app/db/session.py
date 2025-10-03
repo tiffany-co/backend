@@ -1,11 +1,10 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, declarative_base
 
 from app.core.config import settings
 
 # Create a SQLAlchemy engine instance.
-engine = create_engine(settings.DATABASE_URL, pool_pre_ping=True)
+engine = create_engine(str(settings.DATABASE_URL), pool_pre_ping=True)
 
 # Create a sessionmaker class, a factory for creating new Session objects.
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
