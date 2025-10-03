@@ -40,12 +40,15 @@ router = APIRouter()
             "model": ErrorDetail,
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "Not authenticated"
+                    "examples": {
+                        "not_authenticated": {
+                            "summary": "Not Authenticated",
+                            "value": {"detail": "Not authenticated"}
+                        }
                     }
                 }
-            }
-        },
+            },
+        }
     }
 )
 def read_current_user(
