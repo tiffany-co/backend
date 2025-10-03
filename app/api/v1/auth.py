@@ -19,10 +19,15 @@ router = APIRouter()
             "description": "Successful Login",
             "content": {
                 "application/json": {
-                    "example": {
-                        "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-                        "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-                        "token_type": "bearer"
+                    "examples": {
+                        "Success": {
+                            "summary": "Successful Login",
+                            "value": {
+                                "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                                "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                                "token_type": "bearer"
+                            }
+                        }
                     }
                 }
             }
@@ -31,7 +36,12 @@ router = APIRouter()
             "description": "User is inactive",
             "content": {
                 "application/json": {
-                    "example": {"detail": "Inactive user"}
+                    "examples": {
+                        "inactive_user": {
+                            "summary": "Inactive User",
+                            "value": {"detail": "Inactive user"}
+                        }
+                    }
                 }
             }
         },
@@ -39,7 +49,12 @@ router = APIRouter()
             "description": "Incorrect username or password",
             "content": {
                 "application/json": {
-                    "example": {"detail": "Incorrect username or password"}
+                    "examples": {
+                        "invalid_credentials": {
+                            "summary": "Invalid Credentials",
+                            "value": {"detail": "Incorrect username or password"}
+                        }
+                    }
                 }
             },
             "headers": {

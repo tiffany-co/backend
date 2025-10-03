@@ -15,7 +15,12 @@ router = APIRouter()
             "description": "Application is healthy and operational.",
             "content": {
                 "application/json": {
-                    "example": {"status": "ok"}
+                    "examples": {
+                        "Success": {
+                            "summary": "Successful Response",
+                            "value": {"status": "ok"}
+                        }
+                    }
                 }
             },
         }

@@ -42,7 +42,7 @@ def create_contact(
     description="Allows an authenticated user to retrieve a paginated list of all contacts.",
     responses={
         200: {"description": "A list of contacts."},
-        401: {"description": "Unauthorized.", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "Not authenticated"}}}},
+        401: {"description": "Unauthorized.", "model": ErrorDetail, "content": {"application/json": {"examples": { "Unauthorized": {"detail": "Not authenticated"}}}}},
     }
 )
 def read_all_contacts(
@@ -146,9 +146,9 @@ def update_contact(
     description="Allows an administrator to delete a contact from the system.",
     responses={
         204: {"description": "Contact deleted successfully. No content is returned."},
-        401: {"description": "Unauthorized.", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "Not authenticated"}}}},
-        403: {"description": "Forbidden. User is not an admin.", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "You do not have permission to access this resource"}}}},
-        404: {"description": "Contact not found.", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "Contact with ID a1b2c3d4-e5f6-7890-1234-567890abcdef not found."}}}},
+        401: {"description": "Unauthorized.", "model": ErrorDetail, "content": {"application/json": {"examples": { "Unauthorized": {"detail": "Not authenticated"}}}}},
+        403: {"description": "Forbidden. User is not an admin.", "model": ErrorDetail, "content": {"application/json": {"examples": { "Forbidden": {"detail": "You do not have permission to access this resource"}}}}},
+        404: {"description": "Contact not found.", "model": ErrorDetail, "content": {"application/json": {"examples": { "NotFound": {"detail": "Contact with ID a1b2c3d4-e5f6-7890-1234-567890abcdef not found."}}}}},
     }
 )
 def delete_contact(

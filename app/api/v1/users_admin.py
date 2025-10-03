@@ -25,14 +25,23 @@ router = APIRouter()
     responses={
         201: {
             "description": "User created successfully.",
-            "content": {"application/json": {"example": {"id": "a1b2c3d4-e5f6-7890-1234-567890abcdef", "username": "newuser", "full_name": "New User", "phone_number": "1122334455", "is_active": True, "role": "USER", "created_at": "2025-09-02T12:00:00Z", "updated_at": "2025-09-02T12:00:00Z"}}},
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "Success": {
+                            "summary": "successfull response",
+                            "value": {"id": "a1b2c3d4-e5f6-7890-1234-567890abcdef", "username": "newuser", "full_name": "New User", "phone_number": "1122334455", "is_active": True, "role": "USER", "created_at": "2025-09-02T12:00:00Z", "updated_at": "2025-09-02T12:00:00Z"},
+                        }
+                    }
+                }
+            }
         },
         401: {
             "description": "Unauthorized - The user is not authenticated.",
             "model": ErrorDetail,
             "content": {
                 "application/json": {
-                    "example": {"detail": "Not authenticated"}
+                    "examples": {"Unauthorized": {"detail": "Not authenticated"}}
                 }
             }
         },
@@ -41,7 +50,7 @@ router = APIRouter()
             "model": ErrorDetail,
             "content": {
                 "application/json": {
-                    "example": {"detail": "You do not have permission to access this resource"}
+                    "examples": {"Forbidden": {"detail": "You do not have permission to access this resource"}}
                 }
             }
         },
@@ -76,7 +85,7 @@ def create_user(
             "model": ErrorDetail,
             "content": {
                 "application/json": {
-                    "example": {"detail": "Not authenticated"}
+                    "examples": {"Unauthorized": {"detail": "Not authenticated"}}
                 }
             }
         },
@@ -85,7 +94,7 @@ def create_user(
             "model": ErrorDetail,
             "content": {
                 "application/json": {
-                    "example": {"detail": "You do not have permission to access this resource"}
+                    "examples": {"Forbidden": {"detail": "You do not have permission to access this resource"}}
                 }
             }
         }
@@ -111,13 +120,13 @@ def read_users(
             "description": "Successful Response",
             "content": {"application/json": {"example": {"id": "a1b2c3d4-e5f6-7890-1234-567890abcdef", "username": "existinguser", "full_name": "Existing User", "phone_number": "5544332211", "is_active": True, "role": "USER", "created_at": "2025-09-01T10:00:00Z", "updated_at": "2025-09-01T10:00:00Z"}}},
         },
-        404: {"description": "User not found", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "User not found"}}}},
+        404: {"description": "User not found", "model": ErrorDetail, "content": {"application/json": {"examples": {"Unauthorized": {"detail": "User not found"}}}}},
         403: {
             "description": "Forbidden - The user does not have the required admin role.",
             "model": ErrorDetail,
             "content": {
                 "application/json": {
-                    "example": {"detail": "You do not have permission to access this resource"}
+                    "examples": {"Forbidden": {"detail": "You do not have permission to access this resource"}}
                 }
             }
         }
@@ -142,13 +151,13 @@ def read_user_by_id(
             "description": "Successful Response",
             "content": {"application/json": {"example": {"id": "a1b2c3d4-e5f6-7890-1234-567890abcdef", "username": "existinguser", "full_name": "Existing User", "phone_number": "5544332211", "is_active": True, "role": "USER", "created_at": "2025-09-01T10:00:00Z", "updated_at": "2025-09-01T10:00:00Z"}}},
         },
-        404: {"description": "User not found", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "User not found"}}}},
+        404: {"description": "User not found", "model": ErrorDetail, "content": {"application/json": {"examples": {"Unauthorized": {"detail": "User not found"}}}}},
         403: {
             "description": "Forbidden - The user does not have the required admin role.",
             "model": ErrorDetail,
             "content": {
                 "application/json": {
-                    "example": {"detail": "You do not have permission to access this resource"}
+                    "examples": {"Forbidden": {"detail": "You do not have permission to access this resource"}}
                 }
             }
         }
@@ -219,9 +228,9 @@ def delete_user(
     dependencies=[Depends(deps.require_role([UserRole.ADMIN]))],
     responses={
         200: {"description": "A list of the user's permissions."},
-        401: {"description": "Unauthorized", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "Not authenticated"}}}},
+        401: {"description": "Unauthorized", "model": ErrorDetail, "content": {"application/json": {"examples": {"Unauthorized" :{"detail": "Not authenticated"}}}}},
         403: {"description": "Forbidden", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "The user does not have enough privileges"}}}},
-        404: {"description": "User not found", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "User with ID ... not found."}}}},
+        404: {"description": "User not found", "model": ErrorDetail, "content": {"application/json": {"examples": {"NotFound": {"detail": "User with ID ... not found."}}}}},
     }
 )
 def get_user_permissions(user_id: uuid.UUID, db: Session = Depends(deps.get_db)):
@@ -239,10 +248,10 @@ def get_user_permissions(user_id: uuid.UUID, db: Session = Depends(deps.get_db))
             "description": "Permission added successfully. Returns the user's new list of all permissions.",
             "content": {"application/json": {"example": [{"id": "a1b2c3d4...", "name": "contact_update_all", "created_at": "...", "updated_at": "..."}]}}
         },
-        401: {"description": "Unauthorized", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "Not authenticated"}}}},
-        403: {"description": "Forbidden", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "Cannot modify the permissions of an admin user."}}}},
-        404: {"description": "User or Permission not found", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "Permission 'some_permission' not found."}}}},
-        409: {"description": "Conflict - User already has permission", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "User already has the permission 'contact_update_all'."}}}},
+        401: {"description": "Unauthorized", "model": ErrorDetail, "content": {"application/json": {"examples": {"Unauthorized" :{"detail": "Not authenticated"}}}}},
+        403: {"description": "Forbidden", "model": ErrorDetail, "content": {"application/json": {"examples": {"Forbidden": {"detail": "Cannot modify the permissions of an admin user."}}}}},
+        404: {"description": "User or Permission not found", "model": ErrorDetail, "content": {"application/json": {"examples": {"NotFound": {"detail": "Permission 'some_permission' not found."}}}}},
+        409: {"description": "Conflict - User already has permission", "model": ErrorDetail, "content": {"application/json": {"examples": {"Conflict": {"detail": "User already has the permission 'contact_update_all'."}}}}},
     }
 )
 def add_permission_to_user(
@@ -265,9 +274,9 @@ def add_permission_to_user(
     dependencies=[Depends(deps.require_role([UserRole.ADMIN]))],
     responses={
         204: {"description": "Permission removed successfully. No content is returned."},
-        401: {"description": "Unauthorized", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "Not authenticated"}}}},
-        403: {"description": "Forbidden", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "Cannot modify the permissions of an admin user."}}}},
-        404: {"description": "User or Permission not found", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "User does not have the permission 'contact_update_all'."}}}},
+        401: {"description": "Unauthorized", "model": ErrorDetail, "content": {"application/json": {"examples": {"Unauthorized" :{"detail": "Not authenticated"}}}}},
+        403: {"description": "Forbidden", "model": ErrorDetail, "content": {"application/json": {"examples": {"Forbidden": {"detail": "Cannot modify the permissions of an admin user."}}}}},
+        404: {"description": "User or Permission not found", "model": ErrorDetail, "content": {"application/json": {"examples": {"NotFound": {"detail": "User does not have the permission 'contact_update_all'."}}}}},
     }
 )
 def remove_permission_from_user(
