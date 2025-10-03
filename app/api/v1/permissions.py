@@ -20,16 +20,21 @@ router = APIRouter()
             "description": "A list of all available permissions.",
             "content": {
                 "application/json": {
-                    "example": [
-                        {
-                            "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
-                            "created_at": "2025-09-02T12:00:00Z",
-                            "updated_at": "2025-09-02T12:00:00Z",
-                            "name": "contact_update_all",
-                            "name_fa": "ویرایش تمام مخاطبین",
-                            "description_fa": "این دسترسی به کاربر اجازه می‌دهد تا اطلاعات تمام مخاطبین را ویرایش کند."
+                    "examples": {
+                        "Success": {
+                            "summary": "Successful Response",
+                            "value": [
+                                {
+                                    "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+                                    "created_at": "2025-09-02T12:00:00Z",
+                                    "updated_at": "2025-09-02T12:00:00Z",
+                                    "name": "contact_update_all",
+                                    "name_fa": "ویرایش تمام مخاطبین",
+                                    "description_fa": "این دسترسی به کاربر اجازه می‌دهد تا اطلاعات تمام مخاطبین را ویرایش کند."
+                                }
+                            ]
                         }
-                    ]
+                    }
                 }
             }
         },
