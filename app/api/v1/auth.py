@@ -100,7 +100,14 @@ def login(
 )
 def refresh_token(
     db: Session = Depends(deps.get_db),
-    token_in: TokenRefreshRequest = Body(..., example={"refresh_token": "abcd"}),
+    token_in: TokenRefreshRequest = Body(..., examples={
+            "normal": {
+                "summary": "A normal example",
+                "description": "A normal example of a refresh token.",
+                "value": {"refresh_token": "abcd"},
+            }
+        },
+    ),
 ) -> Token:
     """
     Get a new pair of tokens.

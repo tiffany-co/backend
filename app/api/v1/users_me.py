@@ -22,15 +22,20 @@ router = APIRouter()
             "description": "Successful Response",
             "content": {
                 "application/json": {
-                    "example": {
-                        "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
-                        "username": "johndoe",
-                        "full_name": "John Doe",
-                        "phone_number": "1234567890",
-                        "is_active": True,
-                        "role": "USER",
-                        "created_at": "2025-09-02T10:30:00Z",
-                        "updated_at": "2025-09-02T10:30:00Z"
+                    "examples": {
+                        "Success": {
+                            "summary": "Successful Response",
+                            "value": {
+                                "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+                                "username": "johndoe",
+                                "full_name": "John Doe",
+                                "phone_number": "1234567890",
+                                "is_active": True,
+                                "role": "USER",
+                                "created_at": "2025-09-02T10:30:00Z",
+                                "updated_at": "2025-09-02T10:30:00Z"
+                            }
+                        }
                     }
                 }
             }
@@ -70,12 +75,14 @@ def read_current_user(
             "description": "Successful Response",
             "content": {
                 "application/json": {
-                    "example": {
-                        "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
-                        "username": "new_johndoe",
-                        "full_name": "Johnathan Doe",
-                        "phone_number": "0987654321",
-                        "role": "user",
+                    "examples": {
+                        "Success": {
+                            "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+                            "username": "new_johndoe",
+                            "full_name": "Johnathan Doe",
+                            "phone_number": "0987654321",
+                            "role": "user",
+                        }
                     }
                 }
             }
@@ -85,8 +92,10 @@ def read_current_user(
             "model": ErrorDetail,
             "content": {
                 "application/json": {
-                    "example": {
-                       "detail": "This username is already registered."
+                    "examples": {
+                        "Conflict": {
+                            "detail": "This username is already registered."
+                        }
                     }
                 }
             }
@@ -96,8 +105,10 @@ def read_current_user(
             "model": ErrorDetail,
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": "Not authenticated"
+                    "examples": {
+                        "UnAuthorized": {
+                            "detail": "Not authenticated"
+                        }
                     }
                 }
             }
@@ -127,9 +138,11 @@ def update_current_user(
             "description": "A list of the user's assigned permissions.",
             "content": {
                 "application/json": {
-                    "example": [
-                        {"id": "a1b2c3d4-e5f6-7890-1234-567890abcdef", "name": "contact_update_all"},
-                    ]
+                    "examples": {
+                        "Success": [
+                            {"id": "a1b2c3d4-e5f6-7890-1234-567890abcdef", "name": "contact_update_all"},
+                        ]
+                    }
                 }
             }
         },
@@ -138,7 +151,9 @@ def update_current_user(
             "model": ErrorDetail,
             "content": {
                 "application/json": {
-                    "example": {"detail": "Not authenticated"}
+                    "examples": {
+                        "UnAuthorized": {"detail": "Not authenticated"}
+                    }
                 }
             }
         },

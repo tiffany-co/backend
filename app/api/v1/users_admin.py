@@ -118,9 +118,9 @@ def read_users(
     responses={
         200: {
             "description": "Successful Response",
-            "content": {"application/json": {"example": {"id": "a1b2c3d4-e5f6-7890-1234-567890abcdef", "username": "existinguser", "full_name": "Existing User", "phone_number": "5544332211", "is_active": True, "role": "USER", "created_at": "2025-09-01T10:00:00Z", "updated_at": "2025-09-01T10:00:00Z"}}},
+            "content": {"application/json": {"examples": {"Success": {"sammary": "user created", "value": {"id": "a1b2c3d4-e5f6-7890-1234-567890abcdef", "username": "existinguser", "full_name": "Existing User", "phone_number": "5544332211", "is_active": True, "role": "USER", "created_at": "2025-09-01T10:00:00Z", "updated_at": "2025-09-01T10:00:00Z"}}}}},
         },
-        404: {"description": "User not found", "model": ErrorDetail, "content": {"application/json": {"examples": {"Unauthorized": {"detail": "User not found"}}}}},
+        404: {"description": "User not found", "model": ErrorDetail, "content": {"application/json": {"examples": {"NotFound": {"detail": "User not found"}}}}},
         403: {
             "description": "Forbidden - The user does not have the required admin role.",
             "model": ErrorDetail,
@@ -149,7 +149,7 @@ def read_user_by_id(
     responses={
         200: {
             "description": "Successful Response",
-            "content": {"application/json": {"example": {"id": "a1b2c3d4-e5f6-7890-1234-567890abcdef", "username": "existinguser", "full_name": "Existing User", "phone_number": "5544332211", "is_active": True, "role": "USER", "created_at": "2025-09-01T10:00:00Z", "updated_at": "2025-09-01T10:00:00Z"}}},
+            "content": {"application/json": {"examples": { "Success": {"suammary": "user found", "value": {"id": "a1b2c3d4-e5f6-7890-1234-567890abcdef", "username": "existinguser", "full_name": "Existing User", "phone_number": "5544332211", "is_active": True, "role": "USER", "created_at": "2025-09-01T10:00:00Z", "updated_at": "2025-09-01T10:00:00Z"}}}}},
         },
         404: {"description": "User not found", "model": ErrorDetail, "content": {"application/json": {"examples": {"Unauthorized": {"detail": "User not found"}}}}},
         403: {
@@ -179,7 +179,7 @@ def read_user_by_username(
     dependencies=[Depends(deps.require_role([UserRole.ADMIN]))],
     responses={
         200: {"description": "Successful Response", "model": ErrorDetail},
-        403: {"description": "Forbidden", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "Admins cannot update other admins."}}}},
+        403: {"description": "Forbidden", "model": ErrorDetail, "content": {"application/json": {"examples": {"Forbidden": {"detail": "Admins cannot update other admins."}}}}},
         404: {"description": "User not found", "model": ErrorDetail},
         409: {"description": "Conflict Error", "model": ErrorDetail},
     }
@@ -229,7 +229,7 @@ def delete_user(
     responses={
         200: {"description": "A list of the user's permissions."},
         401: {"description": "Unauthorized", "model": ErrorDetail, "content": {"application/json": {"examples": {"Unauthorized" :{"detail": "Not authenticated"}}}}},
-        403: {"description": "Forbidden", "model": ErrorDetail, "content": {"application/json": {"example": {"detail": "The user does not have enough privileges"}}}},
+        403: {"description": "Forbidden", "model": ErrorDetail, "content": {"application/json": {"examples": {"Forbidden": {"detail": "The user does not have enough privileges"}}}}},
         404: {"description": "User not found", "model": ErrorDetail, "content": {"application/json": {"examples": {"NotFound": {"detail": "User with ID ... not found."}}}}},
     }
 )
@@ -246,7 +246,7 @@ def get_user_permissions(user_id: uuid.UUID, db: Session = Depends(deps.get_db))
     responses={
         200: {
             "description": "Permission added successfully. Returns the user's new list of all permissions.",
-            "content": {"application/json": {"example": [{"id": "a1b2c3d4...", "name": "contact_update_all", "created_at": "...", "updated_at": "..."}]}}
+            "content": {"application/json": {"examples": {"Success": {"sammary": "Permission Added", "value": [{"id": "a1b2c3d4...", "name": "contact_update_all", "created_at": "...", "updated_at": "..."}]}}}}
         },
         401: {"description": "Unauthorized", "model": ErrorDetail, "content": {"application/json": {"examples": {"Unauthorized" :{"detail": "Not authenticated"}}}}},
         403: {"description": "Forbidden", "model": ErrorDetail, "content": {"application/json": {"examples": {"Forbidden": {"detail": "Cannot modify the permissions of an admin user."}}}}},
